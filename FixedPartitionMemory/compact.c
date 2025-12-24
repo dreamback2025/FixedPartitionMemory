@@ -4,6 +4,7 @@
 #include "process.h"
 #include "partition.h"
 #include "config.h"
+#include "kernel.h"
 
 // 声明外部变量
 extern process_t process_table[MAX_PROCESSES];

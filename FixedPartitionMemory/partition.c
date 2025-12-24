@@ -11,7 +11,6 @@ static const uint32_t FIXED_PARTITION_SIZES[] = {64, 128, 256, 512};
 partition_t partition_table[MAX_PARTITIONS];
 partition_t* free_list = NULL;
 partition_t* allocated_list = NULL;
-process_t process_table[MAX_PROCESSES];
 
 // 分区初始化 - 固定分区分配系统
 void partition_init(void) {

@@ -28,7 +28,6 @@ typedef struct partition_t {
 extern partition_t partition_table[MAX_PARTITIONS];
 extern partition_t* free_list;
 extern partition_t* allocated_list;
-extern process_t process_table[MAX_PROCESSES];
 
 // ÄÚºËAPI
 void partition_init(void);

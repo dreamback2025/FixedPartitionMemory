@@ -35,6 +35,9 @@ void scheduler_schedule(void);
 void scheduler_run_current_process(void);
 void scheduler_dump_status(void);
 
+// 全局调度器变量声明
+extern scheduler_t g_scheduler;
+
 // 时间片轮转调度相关函数
 void rr_scheduler_init(void);
 process_t* rr_scheduler_get_next(void);
