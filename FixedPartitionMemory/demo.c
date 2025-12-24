@@ -14,12 +14,15 @@
 #include "partition.h"
 #include "log.h"
 #include "config.h"
+#include "kernel.h"
+#include "scheduler.h"
 
 // 全局变量
 static BOOL use_timer = FALSE;
 static BOOL running = TRUE;
 static uint32_t simulated_time = 0;
 extern allocation_strategy_t current_strategy;
+extern scheduler_t g_scheduler;
 
 FILE* log_file = NULL;
 
@@ -221,7 +224,17 @@ void display_system_status() {
         total_used, (float)total_used * 100 / (MEMORY_SIZE - OS_PARTITION_SIZE));
     log_printf("最大空闲块: %d 字节\n", largest_block);
 
-    log_printf("\n控制指令: ");
+    // 显示调度器状态
+    log_printf("\n--- 调度器状态 ---\n");
+    log_printf("调度算法: %s\n", 
+              g_scheduler.type == SCHED_FIFO ? "先进先出(FIFO)" :
+              g_scheduler.type == SCHED_RR ? "时间片轮转(RR)" : "优先级调度");
+    log_printf("就绪队列进程数: %d\n", g_scheduler.ready_queue.count);
+    log_printf("当前运行进程: %s\n", 
+              g_scheduler.current_process ? 
+              g_scheduler.current_process->name : "无");
+    log_printf("当前时间片: %d/%d\n", 
+              g_scheduler.current_time_slice, g_scheduler.time_slice);
     log_printf("Q=退出, C=内存紧凑, F=首次适应, B=最佳适应, W=最坏适应\n");
     log_printf("按任意键继续...\n");
 }
@@ -240,6 +253,9 @@ int main() {
 
     // 初始化内核
     kernel_init();
+    
+    // 初始化调度器（使用时间片轮转算法）
+    scheduler_init(SCHED_RR);
 
     // 选择进程生成方式
     log_printf("\n请选择进程生成方式:\n");
@@ -336,8 +352,8 @@ int main() {
 
                     // 尝试分配内存
                     if (allocate_memory(proc, current_strategy) == 0) {
-                        log_printf("内存已分配给进程 %s\n", proc->name);
-                        process_set_state(proc, PROC_READY);
+                        log_printf("\n内存已分配给进程 %s\n", proc->name);
+                        scheduler_add_process(proc);  // 添加到调度器
                     }
                     else {
                         log_printf("暂时无法为进程 %s 分配内存，将在下次尝试\n", proc->name);
@@ -346,22 +362,9 @@ int main() {
                 }
             }
 
-            // 执行进程
-            for (uint32_t i = 0; i < MAX_PROCESSES; i++) {
-                process_t* proc = &process_table[i];
-                if ((proc->state == PROC_READY || proc->state == PROC_RUNNING) &&
-                    proc->memory_start > 0) { // 确保已分配内存
-                    if (proc->remaining_time > 0) {
-                        proc->remaining_time--;
-                        if (proc->remaining_time == 0) {
-                            log_printf("\n进程 %s (PID=%d) 在时间 %d 完成\n",
-                                proc->name, proc->pid, simulated_time);
-                            free_memory(proc);
-                            process_set_state(proc, PROC_TERMINATED);
-                        }
-                    }
-                }
-            }
+            // 执行调度
+            scheduler_schedule();
+            scheduler_run_current_process();
 
             // 每5个时间单位显示一次系统状态
             if (simulated_time - last_display_time >= 5 || simulated_time < 10) {
@@ -426,6 +429,7 @@ int main() {
 
                     if (allocate_memory(proc, current_strategy) == 0) {
                         log_printf("内存已分配给进程 %s\n", proc->name);
+                        scheduler_add_process(proc);  // 添加到调度器
                     }
                     else {
                         log_printf("无法为进程 %s 分配内存\n", proc->name);
@@ -433,20 +437,9 @@ int main() {
                 }
             }
 
-            // 执行进程
-            for (uint32_t i = 0; i < MAX_PROCESSES; i++) {
-                process_t* proc = &process_table[i];
-                if (proc->state == PROC_READY || proc->state == PROC_RUNNING) {
-                    if (proc->remaining_time > 0) {
-                        proc->remaining_time--;
-                        if (proc->remaining_time == 0) {
-                            log_printf("\n进程 %s (PID=%d) 在时间 %d 完成\n",
-                                proc->name, proc->pid, simulated_time);
-                            free_memory(proc);
-                        }
-                    }
-                }
-            }
+            // 执行调度
+            scheduler_schedule();
+            scheduler_run_current_process();
 
             display_system_status();
         }
