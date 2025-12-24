@@ -1,11 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
-#include <windows.h>
+#include <string.h>
 #include <time.h>
 #include <stdarg.h>
-#include <string.h>
+#include <ctype.h>
+#include <unistd.h>  // 添加unistd.h用于usleep函数
 
 // 包含内核头文件
 #include "os_types.h"
@@ -30,13 +30,12 @@ FILE* log_file = NULL;
 void init_logging() {
     // 创建日志文件名 (包含时间戳)
     time_t now = time(NULL);
-    struct tm t;
-    localtime_s(&t, &now);
+    struct tm* t = localtime(&now);
     char filename[50];
-    strftime(filename, sizeof(filename), "memory_log_%Y%m%d_%H%M%S.txt", &t);
+    strftime(filename, sizeof(filename), "memory_log_%Y%m%d_%H%M%S.txt", t);
 
     // 打开日志文件
-    fopen_s(&log_file, filename, "w");
+    log_file = fopen(filename, "w");
     if (log_file) {
         printf("日志已保存到: %s\n", filename);
     }
@@ -57,7 +56,7 @@ void log_printf(const char* format, ...) {
     char buffer[1024];
     va_list args;
     va_start(args, format);
-    vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, args);
+    vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
     // 打印到控制台
@@ -72,11 +71,30 @@ void log_printf(const char* format, ...) {
 
 // 自定义清屏函数
 void log_clear_screen() {
-    system("cls");
+    system("clear");  // Linux系统使用clear命令
     if (log_file) {
         fprintf(log_file, "\n--- 屏幕已清空 (时间: %d) ---\n", simulated_time);
         fflush(log_file);
     }
+}
+
+// 用于键盘输入的函数（Linux兼容版本）
+char get_char_input() {
+    char input[2];
+    fgets(input, sizeof(input), stdin);
+    // 消费剩余字符直到换行符
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    return input[0];
+}
+
+int get_int_input() {
+    int value;
+    scanf("%d", &value);
+    // 消费剩余字符直到换行符
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    return value;
 }
 
 // 生成自动进程
@@ -85,7 +103,7 @@ void generate_auto_processes(int count) {
 
     for (int i = 0; i < count; i++) {
         char name[16];
-        sprintf_s(name, sizeof(name), "自动进程%d", i + 1);
+        sprintf(name, "自动进程%d", i + 1);
         uint32_t memory_size = (rand() % 128) + 32; // 32-159 bytes
         uint32_t burst_time = (rand() % 10) + 1;   // 1-10 units
         uint32_t arrival_time = rand() % 5;        // 0-4
@@ -102,8 +120,7 @@ void generate_auto_processes(int count) {
 void generate_manual_processes() {
     int count;
     log_printf("请输入进程数量 (1-%d): ", MAX_PROCESSES);
-    scanf_s("%d", &count);
-    getchar(); // 清除缓冲区
+    count = get_int_input();
 
     if (count < 1) count = 1;
     if (count > MAX_PROCESSES) count = MAX_PROCESSES;
@@ -116,19 +133,16 @@ void generate_manual_processes() {
         log_printf("名称: ");
         fgets(name, 16, stdin);
         name[strcspn(name, "\n")] = '\0';
-        if (strlen(name) == 0) sprintf_s(name, sizeof(name), "手动进程%d", i + 1);
+        if (strlen(name) == 0) sprintf(name, "手动进程%d", i + 1);
 
         log_printf("内存大小 (字节): ");
-        scanf_s("%d", &memory_size);
-        getchar();
+        memory_size = get_int_input();
 
         log_printf("执行时间 (单位): ");
-        scanf_s("%d", &burst_time);
-        getchar();
+        burst_time = get_int_input();
 
         log_printf("到达时间: ");
-        scanf_s("%d", &arrival_time);
-        getchar();
+        arrival_time = get_int_input();
 
         process_t* proc = create_process(0, name, memory_size, burst_time, arrival_time);
         if (proc) {
@@ -247,8 +261,7 @@ int main() {
 
     // 获取当前时间
     time_t now = time(NULL);
-    char time_str[26];
-    ctime_s(time_str, sizeof(time_str), &now);
+    char* time_str = ctime(&now);
     log_printf("程序启动时间: %s", time_str);
 
     // 初始化内核
@@ -263,15 +276,13 @@ int main() {
     log_printf("2. 手动输入进程\n");
     log_printf("请选择: ");
 
-    char choice = _getch();
+    char choice = get_char_input();
     log_printf("\n");
 
     switch (choice) {
     case '1':
         log_printf("请输入进程数量 (1-10): ");
-        int count;
-        scanf_s("%d", &count);
-        getchar();
+        int count = get_int_input();
         if (count < 1) count = 1;
         if (count > 10) count = 10;
         generate_auto_processes(count);
@@ -290,7 +301,7 @@ int main() {
     log_printf("2. 自动模式 (定时器)\n");
     log_printf("请选择: ");
 
-    choice = _getch();
+    choice = get_char_input();
     log_printf("\n");
 
     if (choice == '1') {
@@ -310,15 +321,15 @@ int main() {
     display_system_status();
 
     if (use_timer) {
-        // 自动模式 - 使用Sleep()代替WM_TIMER
+        // 自动模式 - 使用sleep代替WM_TIMER
         running = TRUE;
         log_printf("自动模式开始. 按 'q' 退出, 'c' 进行内存紧凑...\n");
 
         uint32_t last_display_time = 0;
         while (running) {
-            // 处理键盘输入
-            if (_kbhit()) {
-                char key = _getch();
+            // 处理键盘输入 - Linux下使用非阻塞输入
+            if (kbhit()) {
+                char key = get_char_input();
                 if (key == 'q' || key == 'Q') {
                     running = FALSE;
                     break;
@@ -384,20 +395,20 @@ int main() {
 
             if (all_completed && simulated_time > 20) {
                 log_printf("\n所有进程已完成！按任意键退出...\n");
-                _getch();
+                get_char_input();
                 running = FALSE;
                 break;
             }
 
-            // 控制模拟速度
-            Sleep(TIMER_INTERVAL);
+            // 控制模拟速度 - 使用Linux下的usleep
+            usleep(TIMER_INTERVAL * 1000);  // 转换为微秒
         }
     }
     else {
         // 手动模式
         while (running) {
             log_printf("\n按任意键推进时间 (Q=退出, C=内存紧凑): ");
-            char key = _getch();
+            char key = get_char_input();
 
             if (key == 'q' || key == 'Q') {
                 break;
@@ -447,10 +458,10 @@ int main() {
 
     // 程序结束
     now = time(NULL);
-    ctime_s(time_str, sizeof(time_str), &now);
+    time_str = ctime(&now);
     log_printf("\n程序结束时间: %s", time_str);
     log_printf("按任意键退出...\n");
-    _getch();
+    get_char_input();
 
     // 关闭日志
     close_logging();

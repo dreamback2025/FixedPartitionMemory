@@ -1,7 +1,7 @@
 #include "os_types.h"
 #include "log.h"
 #include "memory.h"
-#include "process.h"
+#include "process.h"  // 包含process.h
 #include "partition.h"
 #include "config.h"
 
@@ -19,7 +19,7 @@ void memory_init(void) {
     DEBUG_PRINT("Memory manager initialized with strategy %d", current_strategy);
 }
 
-// 分配内存
+// 分配内存 - 固定分区系统
 int allocate_memory(process_t* proc, allocation_strategy_t strategy) {
     if (!proc || proc->memory_size == 0) {
         return -1;
@@ -28,39 +28,8 @@ int allocate_memory(process_t* proc, allocation_strategy_t strategy) {
     DEBUG_PRINT("Allocating memory for PID=%d, Size=%d, Strategy=%d",
         proc->pid, proc->memory_size, strategy);
 
-    partition_t* best_fit = NULL;
-    partition_t* first_fit = NULL;
-    partition_t* worst_fit = NULL;
-
-    // 检查空闲分区
-    partition_t* current = free_list;
-    while (current) {
-        if (current->state == PARTITION_FREE && current->size >= proc->memory_size) {
-            // 首次适应
-            if (!first_fit) {
-                first_fit = current;
-            }
-
-            // 最佳适应
-            if (!best_fit || current->size < best_fit->size) {
-                best_fit = current;
-            }
-
-            // 最坏适应
-            if (!worst_fit || current->size > worst_fit->size) {
-                worst_fit = current;
-            }
-        }
-        current = current->next;
-    }
-
-    // 根据策略选择分区
-    partition_t* selected = NULL;
-    switch (strategy) {
-    case FIRST_FIT: selected = first_fit; break;
-    case BEST_FIT: selected = best_fit; break;
-    case WORST_FIT: selected = worst_fit; break;
-    }
+    // 在固定分区系统中，我们只寻找合适大小的分区
+    partition_t* selected = find_free_partition(proc->memory_size);
 
     if (!selected) {
         kernel_log(LOG_WARNING, "No suitable partition for PID=%d (size=%d)",
@@ -98,40 +67,22 @@ void free_memory(process_t* proc) {
     terminate_process(proc);
 }
 
-// 紧凑内存 (内存整理)
+// 紧凑内存 (内存整理) - 在固定分区系统中，紧凑操作有限
 void compact_memory(void) {
-    kernel_log(LOG_INFO, "Compacting memory to reduce fragmentation");
+    kernel_log(LOG_INFO, "Compacting memory in fixed partition system");
 
-    // 简化版紧凑算法：
-    // 1. 终止所有进程
-    // 2. 释放所有分区
-    // 3. 创建一个大的空闲分区
-
-    // 终止所有进程
+    // 在固定分区系统中，紧凑操作的含义与可变分区不同
+    // 我们将终止所有用户进程，但保持分区结构不变
     for (uint32_t i = 0; i < MAX_PROCESSES; i++) {
-        if (process_table[i].state != PROC_TERMINATED) {
-            terminate_process(&process_table[i]);
+        if (process_table[i].state != PROC_TERMINATED && process_table[i].pid != 0) {
+            // 只终止非操作系统进程
+            if (process_table[i].pid > 0) {
+                terminate_process(&process_table[i]);
+            }
         }
     }
 
-    // 重建分区表
-    partition_table[0].start = 0;
-    partition_table[0].size = OS_PARTITION_SIZE;
-    partition_table[0].state = PARTITION_OS;
-    partition_table[0].owner_pid = 0;
-    partition_table[0].next = &partition_table[1];
-
-    partition_table[1].start = OS_PARTITION_SIZE;
-    partition_table[1].size = MEMORY_SIZE - OS_PARTITION_SIZE;
-    partition_table[1].state = PARTITION_FREE;
-    partition_table[1].owner_pid = 0;
-    partition_table[1].next = NULL;
-
-    // 重建链表
-    free_list = &partition_table[1];
-    allocated_list = &partition_table[0];
-
-    kernel_log(LOG_INFO, "Memory compacted successfully");
+    kernel_log(LOG_INFO, "Memory compaction completed - all user processes terminated");
     dump_memory_map();
 }
 

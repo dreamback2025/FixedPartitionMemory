@@ -2,16 +2,18 @@
 #include "log.h"
 #include "partition.h"
 #include "config.h"
-#include "process.h"
+#include "process.h"  // 包含process.h
 
-
+// 预定义固定分区大小
+static const uint32_t FIXED_PARTITION_SIZES[] = {64, 128, 256, 512};
+#define FIXED_PARTITION_COUNT (sizeof(FIXED_PARTITION_SIZES) / sizeof(FIXED_PARTITION_SIZES[0]))
 
 partition_t partition_table[MAX_PARTITIONS];
 partition_t* free_list = NULL;
 partition_t* allocated_list = NULL;
 process_t process_table[MAX_PROCESSES];
 
-// 分区初始化
+// 分区初始化 - 固定分区分配系统
 void partition_init(void) {
     // 重置分区表
     for (uint32_t i = 0; i < MAX_PARTITIONS; i++) {
@@ -19,44 +21,117 @@ void partition_init(void) {
         partition_table[i].next = NULL;
     }
 
-    // 创建初始分区
+    // 创建操作系统分区
     partition_table[0].start = 0;
     partition_table[0].size = OS_PARTITION_SIZE;
     partition_table[0].state = PARTITION_OS;
     partition_table[0].owner_pid = 0;
 
-    partition_table[1].start = OS_PARTITION_SIZE;
-    partition_table[1].size = MEMORY_SIZE - OS_PARTITION_SIZE;
-    partition_table[1].state = PARTITION_FREE;
-    partition_table[1].owner_pid = 0;
+    // 创建固定分区 - 从内存的剩余部分开始分配
+    uint32_t current_addr = OS_PARTITION_SIZE;
+    uint32_t partition_idx = 1;
 
-    // 建立正确的链表结构
-    partition_table[0].next = &partition_table[1];
-    partition_table[1].next = NULL;
+    // 为每种大小创建分区
+    for (uint32_t size_idx = 0; size_idx < FIXED_PARTITION_COUNT && partition_idx < MAX_PARTITIONS - 1; size_idx++) {
+        uint32_t partition_size = FIXED_PARTITION_SIZES[size_idx];
+        
+        // 计算该大小的分区数量（确保不超过总可用内存）
+        uint32_t remaining_memory = MEMORY_SIZE - current_addr;
+        uint32_t num_partitions = remaining_memory / partition_size;
+        
+        // 限制数量以避免超出分区表大小
+        if (num_partitions > (MAX_PARTITIONS - partition_idx - 1)) {
+            num_partitions = MAX_PARTITIONS - partition_idx - 1;
+        }
+        
+        // 创建固定大小的分区
+        for (uint32_t i = 0; i < num_partitions && partition_idx < MAX_PARTITIONS - 1; i++) {
+            partition_table[partition_idx].start = current_addr;
+            partition_table[partition_idx].size = partition_size;
+            partition_table[partition_idx].state = PARTITION_FREE;
+            partition_table[partition_idx].owner_pid = 0;
+            partition_table[partition_idx].next = &partition_table[partition_idx + 1];
+            
+            current_addr += partition_size;
+            partition_idx++;
+        }
+    }
+    
+    // 最后一个分区作为哨兵，如果还有剩余空间
+    if (partition_idx < MAX_PARTITIONS - 1 && current_addr < MEMORY_SIZE) {
+        partition_table[partition_idx].start = current_addr;
+        partition_table[partition_idx].size = MEMORY_SIZE - current_addr;
+        partition_table[partition_idx].state = PARTITION_FREE;
+        partition_table[partition_idx].owner_pid = 0;
+        partition_table[partition_idx].next = NULL;
+        partition_idx++;
+    } else if (partition_idx < MAX_PARTITIONS) {
+        partition_table[partition_idx - 1].next = NULL;
+    }
 
-    // 初始化全局指针
-    free_list = &partition_table[1];  // 只有用户分区是空闲的
+    // 初始化全局指针 - 遍历分区表建立free_list和allocated_list
+    free_list = NULL;
     allocated_list = &partition_table[0];  // OS分区是已分配的
+    
+    // 建立空闲分区链表
+    for (uint32_t i = 1; i < partition_idx; i++) {
+        if (partition_table[i].state == PARTITION_FREE) {
+            if (free_list == NULL) {
+                free_list = &partition_table[i];
+            }
+        }
+    }
+    
+    // 重新建立空闲分区链表（按地址排序）
+    partition_t* current_free = NULL;
+    for (uint32_t i = 1; i < partition_idx; i++) {
+        if (partition_table[i].state == PARTITION_FREE) {
+            if (current_free == NULL) {
+                free_list = &partition_table[i];
+                current_free = free_list;
+            } else {
+                current_free->next = &partition_table[i];
+                current_free = current_free->next;
+            }
+        }
+    }
+    if (current_free) {
+        current_free->next = NULL;
+    }
 
-    DEBUG_PRINT("Partition table correctly initialized");
+    DEBUG_PRINT("Fixed partition table initialized with %d partitions", partition_idx);
     dump_memory_map();
 }
 
-// 查找空闲分区
+// 查找空闲分区 - 固定分区系统需要找到大小合适的分区
 partition_t* find_free_partition(uint32_t size) {
     partition_t* current = free_list;
+    partition_t* best_fit = NULL;
+    
+    // 在固定分区系统中，我们寻找能够容纳指定大小的最小合适分区
     while (current) {
         if (current->state == PARTITION_FREE && current->size >= size) {
-            return current;
+            // 寻找最佳匹配（最小的足够大的分区）
+            if (!best_fit || current->size < best_fit->size) {
+                best_fit = current;
+            }
         }
         current = current->next;
     }
-    return NULL;
+    
+    return best_fit;
 }
 
-// 分配分区
+// 分配分区 - 固定分区系统
 int allocate_partition(partition_t* part, process_t* proc) {
     if (!part || !proc || part->state != PARTITION_FREE) {
+        return -1;
+    }
+
+    // 检查分区是否足够大
+    if (part->size < proc->memory_size) {
+        kernel_log(LOG_WARNING, "Partition size %d is too small for process memory size %d", 
+                   part->size, proc->memory_size);
         return -1;
     }
 
@@ -83,7 +158,7 @@ int allocate_partition(partition_t* part, process_t* proc) {
         }
     }
 
-    // 添加到已分配列表 (正确维护链表)
+    // 添加到已分配列表
     part->next = allocated_list->next;
     allocated_list->next = part;
 
@@ -133,41 +208,10 @@ void free_partition(partition_t* part) {
     merge_adjacent_free_partitions();
 }
 
-// 合并相邻空闲分区
+// 合并相邻空闲分区 - 在固定分区系统中，这个操作不适用，因为分区大小固定
 void merge_adjacent_free_partitions(void) {
-    // 简化版本：只检查前两个空闲分区
-    if (!free_list || !free_list->next) {
-        return;
-    }
-
-    partition_t* p1 = free_list;
-    partition_t* p2 = free_list->next;
-
-    // 按起始地址排序
-    if (p1->start > p2->start) {
-        // 交换
-        partition_t* temp = p1;
-        p1 = p2;
-        p2 = temp;
-    }
-
-    // 检查是否相邻
-    if (p1->start + p1->size == p2->start) {
-        DEBUG_PRINT("Merging adjacent partitions: 0x%x+%d and 0x%x+%d",
-            p1->start, p1->size, p2->start, p2->size);
-
-        // 合并
-        p1->size += p2->size;
-
-        // 从链表中移除p2
-        partition_t* current = free_list;
-        while (current && current->next != p2) {
-            current = current->next;
-        }
-        if (current) {
-            current->next = p2->next;
-        }
-    }
+    // 固定分区系统中不需要合并，因为分区大小是固定的，不能改变
+    // 保留此函数是为了兼容接口
 }
 
 // 转储内存映射
