@@ -3,8 +3,8 @@
 
 #include "os_types.h"
 
-// 首先前向声明 process_t
-struct process_t;
+// 先包含process.h，这样可以使用完整的process_t定义
+#include "process.h"
 
 // 分区状态
 typedef enum {
@@ -28,12 +28,12 @@ typedef struct partition_t {
 extern partition_t partition_table[MAX_PARTITIONS];
 extern partition_t* free_list;
 extern partition_t* allocated_list;
-extern struct process_t process_table[MAX_PROCESSES];
+extern process_t process_table[MAX_PROCESSES];
 
 // 内核API
 void partition_init(void);
 partition_t* find_free_partition(uint32_t size);
-int allocate_partition(partition_t* part, struct process_t* proc);
+int allocate_partition(partition_t* part, process_t* proc);
 void free_partition(partition_t* part);
 void merge_adjacent_free_partitions(void);
 void dump_memory_map(void);

@@ -39,7 +39,7 @@ typedef struct process_t {
     struct process_t* next;
 } process_t;
 
-// 全局变量声明
+// 全局变量声明（extern）
 extern process_t process_table[MAX_PROCESSES];
 
 // 内核API
