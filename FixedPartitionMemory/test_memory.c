@@ -19,11 +19,10 @@ typedef struct {
     uint32_t size;
     partition_state_t state;
     uint32_t owner_pid;
-    struct partition* next;
 } partition_t;
 
-// 预定义固定分区大小
-static const uint32_t FIXED_PARTITION_SIZES[] = {64, 128, 256, 512};
+// 预定义固定分区大小 - 创建8个固定分区 (总和896字节)
+static const uint32_t FIXED_PARTITION_SIZES[] = {128, 128, 128, 128, 96, 96, 96, 96};
 #define FIXED_PARTITION_COUNT (sizeof(FIXED_PARTITION_SIZES) / sizeof(FIXED_PARTITION_SIZES[0]))
 
 partition_t partition_table[MAX_PARTITIONS];
@@ -46,7 +45,6 @@ int main() {
     // Reset partition table
     for (uint32_t i = 0; i < MAX_PARTITIONS; i++) {
         partition_table[i].state = PARTITION_FREE;
-        partition_table[i].next = NULL;
     }
 
     // Create OS partition
@@ -101,7 +99,6 @@ int main() {
             partition_table[partition_idx].size = partition_size;
             partition_table[partition_idx].state = PARTITION_FREE;
             partition_table[partition_idx].owner_pid = 0;
-            partition_table[partition_idx].next = &partition_table[partition_idx + 1];
             
             printf("  Created partition %d: start=0x%x (addr %d), size=%d\n", 
                    partition_idx, current_addr, current_addr, partition_size);
@@ -121,7 +118,6 @@ int main() {
             partition_table[partition_idx].size = smallest_size;
             partition_table[partition_idx].state = PARTITION_FREE;
             partition_table[partition_idx].owner_pid = 0;
-            partition_table[partition_idx].next = &partition_table[partition_idx + 1];
             
             printf("  Created small partition %d: start=0x%x (addr %d), size=%d\n", 
                    partition_idx, current_addr, current_addr, smallest_size);
@@ -136,7 +132,6 @@ int main() {
                 partition_table[partition_idx].size = remaining_size;
                 partition_table[partition_idx].state = PARTITION_FREE;
                 partition_table[partition_idx].owner_pid = 0;
-                partition_table[partition_idx].next = NULL;
                 
                 printf("  Created final partition %d: start=0x%x (addr %d), size=%d\n", 
                        partition_idx, current_addr, current_addr, remaining_size);
@@ -148,7 +143,6 @@ int main() {
     }
     
     if (partition_idx > 0) {
-        partition_table[partition_idx - 1].next = NULL;
     }
     
     printf("\nTotal partitions created: %d\n", partition_idx);

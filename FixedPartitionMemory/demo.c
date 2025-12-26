@@ -165,17 +165,31 @@ void display_system_status() {
     }
     log_printf("运行模式: %s\n", use_timer ? "自动模式" : "手动模式");
 
-    // 显示内存映射 (安全遍历)
+    // 显示内存映射 (固定分区)
     log_printf("\n--- 内存映射 ---\n");
     log_printf("起始地址  结束地址  大小    状态      所有者PID\n");
 
-    // 从第一个分区开始遍历
-    partition_t* current = &partition_table[0];
-    int count = 0;
+    // 显示操作系统分区
+    partition_t* os_partition = &partition_table[0];
+    const char* state_str_os;
+    switch (os_partition->state) {
+    case PARTITION_FREE: state_str_os = "空闲"; break;
+    case PARTITION_ALLOCATED: state_str_os = "已分配"; break;
+    case PARTITION_OS: state_str_os = "操作系统"; break;
+    default: state_str_os = "未知";
+    }
 
-    while (current && count < MAX_PARTITIONS) {
+    log_printf("0x%04x   0x%04x   %4d    %-8s    %d\n",
+        os_partition->start,
+        os_partition->start + os_partition->size - 1,
+        os_partition->size,
+        state_str_os,
+        os_partition->owner_pid);
+
+    // 显示所有固定分区
+    for (uint32_t i = 1; i < partition_count; i++) {
         const char* state_str;
-        switch (current->state) {
+        switch (partition_table[i].state) {
         case PARTITION_FREE: state_str = "空闲"; break;
         case PARTITION_ALLOCATED: state_str = "已分配"; break;
         case PARTITION_OS: state_str = "操作系统"; break;
@@ -183,21 +197,11 @@ void display_system_status() {
         }
 
         log_printf("0x%04x   0x%04x   %4d    %-8s    %d\n",
-            current->start,
-            current->start + current->size - 1,
-            current->size,
+            partition_table[i].start,
+            partition_table[i].start + partition_table[i].size - 1,
+            partition_table[i].size,
             state_str,
-            current->owner_pid);
-
-        // 安全地移动到下一个分区
-        current = current->next;
-        count++;
-
-        // 防止无限循环
-        if (count >= MAX_PARTITIONS) {
-            log_printf("警告: 分区遍历达到最大限制，可能存在链表错误\n");
-            break;
-        }
+            partition_table[i].owner_pid);
     }
 
     // 显示进程状态
