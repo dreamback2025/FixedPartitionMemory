@@ -30,21 +30,15 @@ void partition_init(void) {
     uint32_t current_addr = OS_PARTITION_SIZE;
     uint32_t partition_idx = 1;
 
-    // 为每种大小创建分区
+    // 为每种大小分配一定比例的 partitions
+    // 为了更合理的分配，我们确保每种大小至少有一个分区
+    uint32_t remaining_memory = MEMORY_SIZE - OS_PARTITION_SIZE;
+    
+    // 首先为每种大小分配至少一个分区 to ensure larger processes can be accommodated
     for (uint32_t size_idx = 0; size_idx < FIXED_PARTITION_COUNT && partition_idx < MAX_PARTITIONS - 1; size_idx++) {
         uint32_t partition_size = FIXED_PARTITION_SIZES[size_idx];
         
-        // 计算该大小的分区数量（确保不超过总可用内存）
-        uint32_t remaining_memory = MEMORY_SIZE - current_addr;
-        uint32_t num_partitions = remaining_memory / partition_size;
-        
-        // 限制数量以避免超出分区表大小
-        if (num_partitions > (MAX_PARTITIONS - partition_idx - 1)) {
-            num_partitions = MAX_PARTITIONS - partition_idx - 1;
-        }
-        
-        // 创建固定大小的分区
-        for (uint32_t i = 0; i < num_partitions && partition_idx < MAX_PARTITIONS - 1; i++) {
+        if (current_addr + partition_size <= MEMORY_SIZE) {
             partition_table[partition_idx].start = current_addr;
             partition_table[partition_idx].size = partition_size;
             partition_table[partition_idx].state = PARTITION_FREE;
@@ -56,15 +50,34 @@ void partition_init(void) {
         }
     }
     
-    // 最后一个分区作为哨兵，如果还有剩余空间
-    if (partition_idx < MAX_PARTITIONS - 1 && current_addr < MEMORY_SIZE) {
-        partition_table[partition_idx].start = current_addr;
-        partition_table[partition_idx].size = MEMORY_SIZE - current_addr;
-        partition_table[partition_idx].state = PARTITION_FREE;
-        partition_table[partition_idx].owner_pid = 0;
-        partition_table[partition_idx].next = NULL;
-        partition_idx++;
-    } else if (partition_idx < MAX_PARTITIONS) {
+    // Now distribute the remaining memory proportionally
+    while (partition_idx < MAX_PARTITIONS - 1 && current_addr < MEMORY_SIZE) {
+        // Cycle through partition sizes to create more of each type
+        BOOL added_partition = FALSE;
+        for (uint32_t size_idx = 0; size_idx < FIXED_PARTITION_COUNT && !added_partition && 
+             partition_idx < MAX_PARTITIONS - 1 && current_addr < MEMORY_SIZE; size_idx++) {
+            uint32_t partition_size = FIXED_PARTITION_SIZES[size_idx];
+            
+            if (current_addr + partition_size <= MEMORY_SIZE) {
+                partition_table[partition_idx].start = current_addr;
+                partition_table[partition_idx].size = partition_size;
+                partition_table[partition_idx].state = PARTITION_FREE;
+                partition_table[partition_idx].owner_pid = 0;
+                partition_table[partition_idx].next = &partition_table[partition_idx + 1];
+                
+                current_addr += partition_size;
+                partition_idx++;
+                added_partition = TRUE;
+            }
+        }
+        
+        // If no partition could be added (remaining memory is too small for any partition size)
+        if (!added_partition) {
+            break;
+        }
+    }
+    
+    if (partition_idx > 0) {
         partition_table[partition_idx - 1].next = NULL;
     }
 
