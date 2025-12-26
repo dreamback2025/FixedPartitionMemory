@@ -129,6 +129,7 @@
     <ClInclude Include="os_types.h" />
     <ClInclude Include="partition.h" />
     <ClInclude Include="process.h" />
+    <ClInclude Include="scheduler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compact.c" />
@@ -140,6 +141,7 @@
     <ClCompile Include="memory.c" />
     <ClCompile Include="partition.c" />
     <ClCompile Include="process.c" />
+    <ClCompile Include="scheduler.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,10 +1,2 @@
-﻿  demo.c
-D:\shuju\FixedPartitionMemory\FixedPartitionMemory\demo.c(1,9): warning C4005: “_CRT_SECURE_NO_WARNINGS”: 宏重定义
-      D:\shuju\FixedPartitionMemory\FixedPartitionMemory\demo.c(1,9):
-      之前在命令行上声明的“_CRT_SECURE_NO_WARNINGS”
-  
-D:\shuju\FixedPartitionMemory\FixedPartitionMemory\demo.c(242,5): warning C4013: “kernel_init”未定义；假设外部返回 int
-  memory.c
-  partition.c
-  正在生成代码...
+﻿  scheduler.c
   FixedPartitionMemory.vcxproj -> D:\shuju\FixedPartitionMemory\x64\Debug\FixedPartitionMemory.exe

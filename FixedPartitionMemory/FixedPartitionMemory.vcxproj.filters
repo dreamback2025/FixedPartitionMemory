@@ -45,6 +45,9 @@
     <ClInclude Include="config.h">
       <Filter>源文件\Kernel\include</Filter>
     </ClInclude>
+    <ClInclude Include="scheduler.h">
+      <Filter>源文件\Kernel\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="init.c">
@@ -67,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="demo.c">
       <Filter>源文件\Demo</Filter>
+    </ClCompile>
+    <ClCompile Include="scheduler.c">
+      <Filter>源文件\Kernel\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
