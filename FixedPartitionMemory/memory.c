@@ -6,8 +6,8 @@
 #include "config.h"
 
 
-extern partition_t* free_list;
-extern partition_t* allocated_list;
+extern uint32_t partition_count;
+extern partition_t partition_table[MAX_PARTITIONS];
 extern process_t process_table[MAX_PROCESSES];
 
 allocation_strategy_t current_strategy = BEST_FIT;  // 默认策略
@@ -54,13 +54,11 @@ void free_memory(process_t* proc) {
     DEBUG_PRINT("Freeing memory for PID=%d", proc->pid);
 
     // 查找对应的分区
-    partition_t* current = allocated_list;
-    while (current) {
-        if (current->owner_pid == proc->pid) {
-            free_partition(current);
+    for (uint32_t i = 1; i < partition_count; i++) {
+        if (partition_table[i].owner_pid == proc->pid) {
+            free_partition(&partition_table[i]);
             break;
         }
-        current = current->next;
     }
 
     // 终止进程
@@ -89,12 +87,10 @@ void compact_memory(void) {
 // 获取总空闲内存
 uint32_t get_total_free_memory(void) {
     uint32_t total = 0;
-    partition_t* current = free_list;
-    while (current) {
-        if (current->state == PARTITION_FREE) {
-            total += current->size;
+    for (uint32_t i = 1; i < partition_count; i++) {
+        if (partition_table[i].state == PARTITION_FREE) {
+            total += partition_table[i].size;
         }
-        current = current->next;
     }
     return total;
 }
@@ -102,12 +98,10 @@ uint32_t get_total_free_memory(void) {
 // 获取最大空闲块
 uint32_t get_largest_free_block(void) {
     uint32_t largest = 0;
-    partition_t* current = free_list;
-    while (current) {
-        if (current->state == PARTITION_FREE && current->size > largest) {
-            largest = current->size;
+    for (uint32_t i = 1; i < partition_count; i++) {
+        if (partition_table[i].state == PARTITION_FREE && partition_table[i].size > largest) {
+            largest = partition_table[i].size;
         }
-        current = current->next;
     }
     return largest;
 }
