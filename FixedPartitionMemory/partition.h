@@ -13,22 +13,17 @@ typedef enum {
     PARTITION_OS       // 操作系统占用
 } partition_state_t;
 
-// 内存分区 (不包含函数指针，简化结构)
+// 内存分区 (固定分区，不使用链表)
 typedef struct partition_t {
     uint32_t start;            // 起始地址
     uint32_t size;             // 大小
     partition_state_t state;   // 状态
     uint32_t owner_pid;        // 所有者PID (0表示无)
-
-    // 链表指针
-    struct partition_t* next;
 } partition_t;
 
 // 全局变量声明
 extern partition_t partition_table[MAX_PARTITIONS];
-extern partition_t* free_list;
-extern partition_t* allocated_list;
-extern process_t process_table[MAX_PROCESSES];
+extern uint32_t partition_count;
 
 // 内核API
 void partition_init(void);

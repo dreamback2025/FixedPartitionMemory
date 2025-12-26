@@ -9,22 +9,16 @@
 *.exe
 
 # Dependencies
-node_modules/
 venv/
 .venv/
 __pycache__/
-.mypy_cache/
-.pytest_cache/
-dist/
-build/
-target/
-.gradle/
+*.pyc
+*.pyo
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
-*.swo
 
 # Editors
 .vscode/
@@ -35,16 +29,17 @@ target/
 .env.local
 *.env.*
 
-# System files
-.DS_Store
-Thumbs.db
-
 # Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Common compressed files
+# Distribution
+dist/
+build/
+target/
+
+# Compressed files
 *.zip
 *.gz
 *.tar

@@ -6,7 +6,7 @@
 #include "memory.h"
 
 // 全局调度器
-static scheduler_t g_scheduler;
+scheduler_t g_scheduler;
 
 // 就绪队列操作
 static void ready_queue_init(ready_queue_t* queue) {

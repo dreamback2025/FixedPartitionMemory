@@ -5,19 +5,6 @@
 #include <stddef.h>  // 包含 size_t
 #include <stdint.h>  // 包含标准整数类型
 
-// 基础类型 (使用标准类型，不重新定义)
-typedef uint8_t uint8_t;
-typedef uint16_t uint16_t;
-typedef uint32_t uint32_t;
-typedef uint64_t uint64_t;
-typedef int8_t int8_t;
-typedef int16_t int16_t;
-typedef int32_t int32_t;
-typedef int64_t int64_t;
-
-// 使用标准NULL定义
-#include <stddef.h>
-
 // 定义布尔类型
 typedef int BOOL;
 #define TRUE 1
