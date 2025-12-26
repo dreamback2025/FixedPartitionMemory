@@ -1,0 +1,7 @@
+=== Fixed Partition Memory Management System ===
+Program start time: Fri Dec 26 12:04:41 2025
+
+Please select process generation method:
+1. Auto generate processes
+2. Manual input processes
+Please select: 

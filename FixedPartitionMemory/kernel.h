@@ -7,19 +7,19 @@
 #include "partition.h"
 #include "memory.h"
 
-// 内核初始化函数
+// Kernel initialization function
 void kernel_init(void);
 
-// 获取当前时间
+// Get current time
 uint32_t get_current_time(void);
 
-// 推进时间
+// Advance time
 void advance_time(void);
 
-// 获取内存指针
+// Get memory pointer
 uint8_t* get_memory_base(void);
 
-// 获取内存大小
+// Get memory size
 uint32_t get_memory_size(void);
 
 #endif // _KERNEL_H
