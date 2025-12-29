@@ -1,2 +1,6 @@
-﻿  scheduler.c
+﻿  demo.c
+D:\shuju\FixedPartitionMemory\FixedPartitionMemory\demo.c(1,9): warning C4005: “_CRT_SECURE_NO_WARNINGS”: 宏重定义
+      D:\shuju\FixedPartitionMemory\FixedPartitionMemory\demo.c(1,9):
+      之前在命令行上声明的“_CRT_SECURE_NO_WARNINGS”
+  
   FixedPartitionMemory.vcxproj -> D:\shuju\FixedPartitionMemory\x64\Debug\FixedPartitionMemory.exe

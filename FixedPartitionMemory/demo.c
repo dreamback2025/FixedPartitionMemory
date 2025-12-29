@@ -1,13 +1,14 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+#include <windows.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <unistd.h>  // Add unistd.h for usleep function
+#include "unistd.h"  // 添加unistd.h头文件以使用usleep函数
 
-// Include kernel headers
+// 包含内核头文件
 #include "os_types.h"
 #include "memory.h"
 #include "process.h"
@@ -17,7 +18,7 @@
 #include "kernel.h"
 #include "scheduler.h"
 
-// Global variables
+// 全局变量
 static BOOL use_timer = FALSE;
 static BOOL running = TRUE;
 static uint32_t simulated_time = 0;
@@ -26,21 +27,21 @@ extern scheduler_t g_scheduler;
 
 FILE* log_file = NULL;
 
-// Logging functions
+// 日志初始化函数
 void init_logging() {
-    // Create log filename (with timestamp)
+    // 创建带时间戳的日志文件名
     time_t now = time(NULL);
     struct tm* t = localtime(&now);
     char filename[50];
     strftime(filename, sizeof(filename), "memory_log_%Y%m%d_%H%M%S.txt", t);
 
-    // Open log file
+    // 打开日志文件
     log_file = fopen(filename, "w");
     if (log_file) {
-        printf("Log saved to: %s\n", filename);
+        printf("日志已保存到: %s\n", filename);
     }
     else {
-        printf("Cannot create log file!\n");
+        printf("无法创建日志文件！\n");
     }
 }
 
@@ -59,30 +60,30 @@ void log_printf(const char* format, ...) {
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
-    // 打印到控制台
+    // 输出到控制台
     printf("%s", buffer);
 
-    // 打印到日志文件
+    // 输出到日志文件
     if (log_file) {
         fprintf(log_file, "%s", buffer);
         fflush(log_file);  // 确保内容立即写入文件
     }
 }
 
-// Custom screen clear function
+// 自定义清屏函数
 void log_clear_screen() {
-    system("clear");  // Linux system uses clear command
+    system("cls");  // Linux系统使用clear命令
     if (log_file) {
-        fprintf(log_file, "\n--- Screen cleared (Time: %d) ---\n", simulated_time);
+        fprintf(log_file, "\n--- 屏幕已清除 (时间: %d) ---\n", simulated_time);
         fflush(log_file);
     }
 }
 
-// Functions for keyboard input (Linux compatible version)
+// 键盘输入函数（Linux兼容版本）
 char get_char_input() {
     char input[2];
     fgets(input, sizeof(input), stdin);
-    // Consume remaining characters until newline
+    // 清除缓冲区直到换行符
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
     return input[0];
@@ -91,35 +92,35 @@ char get_char_input() {
 int get_int_input() {
     int value;
     scanf("%d", &value);
-    // Consume remaining characters until newline
+    // 清除缓冲区直到换行符
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
     return value;
 }
 
-// Generate automatic processes
+// 生成自动进程
 void generate_auto_processes(int count) {
     srand((unsigned)time(NULL));
 
     for (int i = 0; i < count; i++) {
         char name[16];
-        sprintf(name, "AutoProcess%d", i + 1);
-        uint32_t memory_size = (rand() % 128) + 32; // 32-159 bytes
-        uint32_t burst_time = (rand() % 10) + 1;   // 1-10 units
+        sprintf(name, "自动进程%d", i + 1);
+        uint32_t memory_size = (rand() % 128) + 32; // 32-159字节
+        uint32_t burst_time = (rand() % 10) + 1;   // 1-10个时间单位
         uint32_t arrival_time = rand() % 5;        // 0-4
 
         process_t* proc = create_process(0, name, memory_size, burst_time, arrival_time);
         if (proc) {
-            log_printf("Created auto process: %s, Memory=%d, Time=%d, Arrival=%d\n",
+            log_printf("已创建自动进程: %s, 内存=%d, 时间=%d, 到达时间=%d\n",
                 name, memory_size, burst_time, arrival_time);
         }
     }
 }
 
-// Generate manual processes
+// 生成手动进程
 void generate_manual_processes() {
     int count;
-    log_printf("Please enter number of processes (1-%d): ", MAX_PROCESSES);
+    log_printf("请输入进程数量 (1-%d): ", MAX_PROCESSES);
     count = get_int_input();
 
     if (count < 1) count = 1;
@@ -129,55 +130,55 @@ void generate_manual_processes() {
         char name[16];
         uint32_t memory_size, burst_time, arrival_time;
 
-        log_printf("\nProcess %d:\n", i + 1);
-        log_printf("Name: ");
+        log_printf("\n进程 %d:\n", i + 1);
+        log_printf("名称: ");
         fgets(name, 16, stdin);
         name[strcspn(name, "\n")] = '\0';
-        if (strlen(name) == 0) sprintf(name, "ManualProcess%d", i + 1);
+        if (strlen(name) == 0) sprintf(name, "手动进程%d", i + 1);
 
-        log_printf("Memory size (bytes): ");
+        log_printf("内存大小 (字节): ");
         memory_size = get_int_input();
 
-        log_printf("Execution time (units): ");
+        log_printf("执行时间 (单位): ");
         burst_time = get_int_input();
 
-        log_printf("Arrival time: ");
+        log_printf("到达时间: ");
         arrival_time = get_int_input();
 
         process_t* proc = create_process(0, name, memory_size, burst_time, arrival_time);
         if (proc) {
-            log_printf("Created manual process: %s, Memory=%d, Time=%d, Arrival=%d\n",
+            log_printf("已创建手动进程: %s, 内存=%d, 时间=%d, 到达时间=%d\n",
                 name, memory_size, burst_time, arrival_time);
         }
     }
 }
 
-// Display system status
+// 显示系统状态
 void display_system_status() {
     log_clear_screen();
-    log_printf("=== Fixed Partition Memory Management System ===\n");
-    log_printf("Current Time: %d\n", simulated_time);
-    log_printf("Allocation Strategy: ");
+    log_printf("=== 固定分区内存管理系统 ===\n");
+    log_printf("当前时间: %d\n", simulated_time);
+    log_printf("分配策略: ");
     switch (current_strategy) {
-    case FIRST_FIT: log_printf("First Fit Algorithm\n"); break;
-    case BEST_FIT: log_printf("Best Fit Algorithm\n"); break;
-    case WORST_FIT: log_printf("Worst Fit Algorithm\n"); break;
+    case FIRST_FIT: log_printf("首次适应算法\n"); break;
+    case BEST_FIT: log_printf("最佳适应算法\n"); break;
+    case WORST_FIT: log_printf("最差适应算法\n"); break;
     }
-    log_printf("Run Mode: %s\n", use_timer ? "Auto Mode" : "Manual Mode");
+    log_printf("运行模式: %s\n", use_timer ? "自动模式" : "手动模式");
 
-    // Display memory map (fixed partitions)
-    log_printf("\n--- Memory Map ---\n");
-    log_printf("Start Addr  End Addr  Size    Status      Owner PID\n");
+    // 显示内存映射（固定分区）
+    log_printf("\n--- 内存映射 ---\n");
+    log_printf("起始地址  结束地址  大小    状态       所有者PID\n");
 
-    // Display OS partition
+    // 显示操作系统分区
     if (partition_count > 0) {
         partition_t* os_partition = &partition_table[0];
         const char* state_str_os;
         switch (os_partition->state) {
-        case PARTITION_FREE: state_str_os = "Free"; break;
-        case PARTITION_ALLOCATED: state_str_os = "Allocated"; break;
-        case PARTITION_OS: state_str_os = "OS"; break;
-        default: state_str_os = "Unknown";
+        case PARTITION_FREE: state_str_os = "空闲"; break;
+        case PARTITION_ALLOCATED: state_str_os = "已分配"; break;
+        case PARTITION_OS: state_str_os = "操作系统"; break;
+        default: state_str_os = "未知";
         }
 
         log_printf("0x%04x   0x%04x   %4d    %-8s    %d\n",
@@ -188,14 +189,14 @@ void display_system_status() {
             os_partition->owner_pid);
     }
 
-    // Display all fixed partitions - BUG FIX: Add boundary check to prevent array access beyond MAX_PARTITIONS
+    // 显示所有固定分区 - BUG修复：添加边界检查防止数组越界
     for (uint32_t i = 1; i < partition_count && i < MAX_PARTITIONS; i++) {
         const char* state_str;
         switch (partition_table[i].state) {
-        case PARTITION_FREE: state_str = "Free"; break;
-        case PARTITION_ALLOCATED: state_str = "Allocated"; break;
-        case PARTITION_OS: state_str = "OS"; break;
-        default: state_str = "Unknown";
+        case PARTITION_FREE: state_str = "空闲"; break;
+        case PARTITION_ALLOCATED: state_str = "已分配"; break;
+        case PARTITION_OS: state_str = "操作系统"; break;
+        default: state_str = "未知";
         }
 
         log_printf("0x%04x   0x%04x   %4d    %-8s    %d\n",
@@ -206,9 +207,9 @@ void display_system_status() {
             partition_table[i].owner_pid);
     }
 
-    // Display process status
-    log_printf("\n--- Process Status ---\n");
-    log_printf("PID  Name           Status      Memory Size  Remaining Time  Arrival Time\n");
+    // 显示进程状态
+    log_printf("\n--- 进程状态 ---\n");
+    log_printf("PID  名称          状态      内存大小  剩余时间  到达时间\n");
 
     extern process_t process_table[MAX_PROCESSES];
     for (uint32_t i = 0; i < MAX_PROCESSES; i++) {
@@ -216,78 +217,78 @@ void display_system_status() {
         if (proc->state != PROC_TERMINATED) {
             const char* state_str;
             switch (proc->state) {
-            case PROC_CREATED: state_str = "Created"; break;
-            case PROC_READY: state_str = "Ready"; break;
-            case PROC_RUNNING: state_str = "Running"; break;
-            case PROC_WAITING: state_str = "Waiting"; break;
-            case PROC_TERMINATED: state_str = "Terminated"; break;
-            default: state_str = "Unknown";
+            case PROC_CREATED: state_str = "已创建"; break;
+            case PROC_READY: state_str = "就绪"; break;
+            case PROC_RUNNING: state_str = "运行中"; break;
+            case PROC_WAITING: state_str = "等待中"; break;
+            case PROC_TERMINATED: state_str = "已终止"; break;
+            default: state_str = "未知";
             }
 
-            log_printf("%-4d %-12s  %-8s  %4d    %4d       %4d\n",
+            log_printf("%-4d %-12s  %-8s  %4d      %4d       %4d\n",
                 proc->pid, proc->name, state_str,
                 proc->memory_size, proc->remaining_time, proc->arrival_time);
         }
     }
 
-    // Display memory statistics
+    // 显示内存统计信息
     uint32_t total_free = get_total_free_memory();
     uint32_t largest_block = get_largest_free_block();
     uint32_t total_used = MEMORY_SIZE - OS_PARTITION_SIZE - total_free;
 
-    log_printf("\n--- Memory Statistics ---\n");
-    log_printf("Total Memory: %d bytes\n", MEMORY_SIZE);
-    log_printf("OS Occupied: %d bytes\n", OS_PARTITION_SIZE);
-    log_printf("Total Free Memory: %d bytes (%.1f%%)\n",
+    log_printf("\n--- 内存统计 ---\n");
+    log_printf("总内存: %d 字节\n", MEMORY_SIZE);
+    log_printf("操作系统占用: %d 字节\n", OS_PARTITION_SIZE);
+    log_printf("总空闲内存: %d 字节 (%.1f%%)\n",
         total_free, (float)total_free * 100 / (MEMORY_SIZE - OS_PARTITION_SIZE));
-    log_printf("Total Used Memory: %d bytes (%.1f%%)\n",
+    log_printf("总使用内存: %d 字节 (%.1f%%)\n",
         total_used, (float)total_used * 100 / (MEMORY_SIZE - OS_PARTITION_SIZE));
-    log_printf("Largest Free Block: %d bytes\n", largest_block);
+    log_printf("最大空闲块: %d 字节\n", largest_block);
 
-    // Display scheduler status
-    log_printf("\n--- Scheduler Status ---\n");
-    log_printf("Scheduling Algorithm: %s\n", 
-              g_scheduler.type == SCHED_FIFO ? "First In First Out (FIFO)" :
-              g_scheduler.type == SCHED_RR ? "Round Robin (RR)" : "Priority Scheduling");
-    log_printf("Ready Queue Process Count: %d\n", g_scheduler.ready_queue.count);
-    log_printf("Current Running Process: %s\n", 
-              g_scheduler.current_process ? 
-              g_scheduler.current_process->name : "None");
-    log_printf("Current Time Slice: %d/%d\n", 
-              g_scheduler.current_time_slice, g_scheduler.time_slice);
-    log_printf("Q=Quit, C=Compact Memory, F=First Fit, B=Best Fit, W=Worst Fit\n");
-    log_printf("Press any key to continue...\n");
+    // 显示调度器状态
+    log_printf("\n--- 调度器状态 ---\n");
+    log_printf("调度算法: %s\n",
+        g_scheduler.type == SCHED_FIFO ? "先来先服务 (FIFO)" :
+        g_scheduler.type == SCHED_RR ? "轮转调度 (RR)" : "优先级调度");
+    log_printf("就绪队列进程数: %d\n", g_scheduler.ready_queue.count);
+    log_printf("当前运行进程: %s\n",
+        g_scheduler.current_process ?
+        g_scheduler.current_process->name : "无");
+    log_printf("当前时间片: %d/%d\n",
+        g_scheduler.current_time_slice, g_scheduler.time_slice);
+    log_printf("Q=退出, C=内存紧缩, F=首次适应, B=最佳适应, W=最差适应\n");
+    log_printf("按任意键继续...\n");
 }
 
 int main() {
-    // Initialize logging
+    // 初始化日志系统
     init_logging();
 
-    log_printf("=== Fixed Partition Memory Management System ===\n");
+    log_printf("=== 固定分区内存管理系统 ===\n");
 
-    // Get current time
+    // 获取当前时间
     time_t now = time(NULL);
     char* time_str = ctime(&now);
-    log_printf("Program start time: %s", time_str);
+    log_printf("程序开始时间: %s", time_str);
 
-    // Initialize kernel
+    // 初始化内核
     kernel_init();
-    
-    // Initialize scheduler (using round-robin algorithm)
+
+    // 初始化调度器（使用轮转调度算法）
     scheduler_init(SCHED_RR);
 
-    // Select process generation method
-    log_printf("\nPlease select process generation method:\n");
-    log_printf("1. Auto generate processes\n");
-    log_printf("2. Manual input processes\n");
-    log_printf("Please select: ");
+    // 选择进程生成方式
+    log_printf("\n请选择进程生成方式:\n");
+    log_printf("1. 自动生成进程\n");
+    log_printf("2. 手动输入进程\n");
+    log_printf("请选择: ");
 
     char choice = get_char_input();
     log_printf("\n");
 
     switch (choice) {
     case '1':
-        log_printf("Please enter number of processes (1-10): ");
+        log_printf("请输入进程数量 (1-10): ");
         int count = get_int_input();
         if (count < 1) count = 1;
         if (count > 10) count = 10;
@@ -297,43 +298,43 @@ int main() {
         generate_manual_processes();
         break;
     default:
-        log_printf("Invalid selection, using default 5 processes\n");
+        log_printf("无效选择，使用默认5个进程\n");
         generate_auto_processes(5);
     }
 
-    // Select time advancement method
-    log_printf("\nPlease select time advancement method:\n");
-    log_printf("1. Manual mode (press any key to advance time)\n");
-    log_printf("2. Auto mode (timer)\n");
-    log_printf("Please select: ");
+    // 选择时间推进方式
+    log_printf("\n请选择时间推进方式:\n");
+    log_printf("1. 手动模式（按任意键推进时间）\n");
+    log_printf("2. 自动模式（定时器）\n");
+    log_printf("请选择: ");
 
     choice = get_char_input();
     log_printf("\n");
 
     if (choice == '1') {
         use_timer = FALSE;
-        log_printf("Manual mode selected. Press any key to advance time.\n");
+        log_printf("已选择手动模式。按任意键推进时间。\n");
     }
     else if (choice == '2') {
         use_timer = TRUE;
-        log_printf("Auto mode selected. Timer interval: %dms\n", TIMER_INTERVAL);
+        log_printf("已选择自动模式。定时器间隔: %d毫秒\n", TIMER_INTERVAL);
     }
     else {
-        log_printf("Invalid selection, using manual mode\n");
+        log_printf("无效选择，使用手动模式\n");
         use_timer = FALSE;
     }
 
-    // Display initial status
+    // 显示初始状态
     display_system_status();
 
     if (use_timer) {
-        // Auto mode - use sleep instead of WM_TIMER
+        // 自动模式 - 使用sleep代替WM_TIMER
         running = TRUE;
-        log_printf("Auto mode started. Press 'q' to quit, 'c' to compact memory...\n");
+        log_printf("自动模式已启动。按'q'退出，'c'进行内存紧缩...\n");
 
         uint32_t last_display_time = 0;
         while (running) {
-            // Handle keyboard input - non-blocking input on Linux
+            // 处理键盘输入 - Linux非阻塞输入
             if (kbhit()) {
                 char key = get_char_input();
                 if (key == 'q' || key == 'Q') {
@@ -357,39 +358,39 @@ int main() {
                 }
             }
 
-            // Advance time by one unit each loop
+            // 每次循环推进一个时间单位
             simulated_time++;
 
-            // Check for newly arrived processes - BUG FIX: Only check processes that haven't terminated
+            // 检查新到达的进程 - BUG修复：只检查未终止的进程
             for (uint32_t i = 0; i < MAX_PROCESSES; i++) {
                 process_t* proc = &process_table[i];
                 if (proc->state != PROC_TERMINATED && proc->state == PROC_CREATED && proc->arrival_time <= simulated_time) {
-                    log_printf("\nProcess %s (PID=%d) arrived at time %d\n",
+                    log_printf("\n进程 %s (PID=%d) 在时间 %d 到达\n",
                         proc->name, proc->pid, simulated_time);
 
-                    // Try to allocate memory
+                    // 尝试分配内存
                     if (allocate_memory(proc, current_strategy) == 0) {
-                        log_printf("\nMemory allocated to process %s\n", proc->name);
-                        scheduler_add_process(proc);  // Add to scheduler
+                        log_printf("\n已为进程 %s 分配内存\n", proc->name);
+                        scheduler_add_process(proc);  // 添加到调度器
                     }
                     else {
-                        log_printf("Cannot allocate memory for process %s, will try again next time\n", proc->name);
-                        // Keep PROC_CREATED state, try again at next time point
+                        log_printf("无法为进程 %s 分配内存，将在下次尝试\n", proc->name);
+                        // 保持PROC_CREATED状态，下次时间点再尝试
                     }
                 }
             }
 
-            // Execute scheduling
+            // 执行调度
             scheduler_schedule();
             scheduler_run_current_process();
 
-            // Display system status every 5 time units
+            // 每5个时间单位显示一次系统状态
             if (simulated_time - last_display_time >= 5 || simulated_time < 10) {
                 display_system_status();
                 last_display_time = simulated_time;
             }
 
-            // Check if all processes have completed
+            // 检查所有进程是否已完成
             int all_completed = 1;
             for (uint32_t i = 0; i < MAX_PROCESSES; i++) {
                 process_t* proc = &process_table[i];
@@ -400,20 +401,20 @@ int main() {
             }
 
             if (all_completed && simulated_time > 20) {
-                log_printf("\nAll processes completed! Press any key to exit...\n");
+                log_printf("\n所有进程已完成！按任意键退出...\n");
                 get_char_input();
                 running = FALSE;
                 break;
             }
 
-            // Control simulation speed - use usleep on Linux
-            usleep(TIMER_INTERVAL * 1000);  // Convert to microseconds
+            // 控制模拟速度 - Linux使用usleep
+            Sleep(TIMER_INTERVAL);   // 转换为微秒
         }
     }
     else {
-        // Manual mode
+        // 手动模式
         while (running) {
-            log_printf("\nPress any key to advance time (Q=Quit, C=Compact Memory): ");
+            log_printf("\n按任意键推进时间 (Q=退出, C=内存紧缩): ");
             char key = get_char_input();
 
             if (key == 'q' || key == 'Q') {
@@ -436,25 +437,25 @@ int main() {
 
             simulated_time++;
 
-            // Check for newly arrived processes - BUG FIX: Only check processes that haven't terminated
+            // 检查新到达的进程 - BUG修复：只检查未终止的进程
             extern process_t process_table[MAX_PROCESSES];
             for (uint32_t i = 0; i < MAX_PROCESSES; i++) {
                 process_t* proc = &process_table[i];
                 if (proc->state != PROC_TERMINATED && proc->state == PROC_CREATED && proc->arrival_time <= simulated_time) {
-                    log_printf("\nProcess %s (PID=%d) arrived at time %d\n",
+                    log_printf("\n进程 %s (PID=%d) 在时间 %d 到达\n",
                         proc->name, proc->pid, simulated_time);
 
                     if (allocate_memory(proc, current_strategy) == 0) {
-                        log_printf("Memory allocated to process %s\n", proc->name);
-                        scheduler_add_process(proc);  // Add to scheduler
+                        log_printf("已为进程 %s 分配内存\n", proc->name);
+                        scheduler_add_process(proc);  // 添加到调度器
                     }
                     else {
-                        log_printf("Cannot allocate memory for process %s\n", proc->name);
+                        log_printf("无法为进程 %s 分配内存\n", proc->name);
                     }
                 }
             }
 
-            // Execute scheduling
+            // 执行调度
             scheduler_schedule();
             scheduler_run_current_process();
 
@@ -462,14 +463,14 @@ int main() {
         }
     }
 
-    // Program end
+    // 程序结束
     now = time(NULL);
     time_str = ctime(&now);
-    log_printf("\nProgram end time: %s", time_str);
-    log_printf("Press any key to exit...\n");
+    log_printf("\n程序结束时间: %s", time_str);
+    log_printf("按任意键退出...\n");
     get_char_input();
 
-    // Close logging
+    // 关闭日志系统
     close_logging();
     return 0;
 }

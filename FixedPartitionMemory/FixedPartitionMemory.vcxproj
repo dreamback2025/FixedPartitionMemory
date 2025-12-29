@@ -130,6 +130,7 @@
     <ClInclude Include="partition.h" />
     <ClInclude Include="process.h" />
     <ClInclude Include="scheduler.h" />
+    <ClInclude Include="unistd.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compact.c" />

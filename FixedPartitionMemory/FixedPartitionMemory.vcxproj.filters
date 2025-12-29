@@ -48,6 +48,9 @@
     <ClInclude Include="scheduler.h">
       <Filter>源文件\Kernel\include</Filter>
     </ClInclude>
+    <ClInclude Include="unistd.h">
+      <Filter>源文件\Kernel\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="init.c">
