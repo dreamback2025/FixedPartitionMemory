@@ -9,16 +9,12 @@
 *.a
 
 # Dependencies
+venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
-.Python
-env/
-venv/
-.venv/
-.env
-.env.local
-.env.*
+*.pyd
 
 # Logs and temp files
 *.log
@@ -26,44 +22,17 @@ venv/
 *.swp
 *.swo
 
+# Environment
+.env
+.env.local
+*.env.*
+
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # Build directories
 build/
 dist/
 target/
-.DS_Store
-Thumbs.db
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Package management
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Testing
-.pytest_cache/
-.mypy_cache/
-.tox/
-.coverage*
-
-# System files
-.DS_Store
-Thumbs.db
-*.DS_Store
-.DS_Store?
-._.DS_Store
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
 ```

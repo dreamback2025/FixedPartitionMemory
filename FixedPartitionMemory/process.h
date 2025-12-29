@@ -39,8 +39,25 @@ typedef struct process_t {
     struct process_t* next;
 } process_t;
 
+// 进程控制块扩展，包含CPU上下文
+typedef struct {
+    process_t base;                 // 基础进程结构
+    uint32_t eax, ebx, ecx, edx;    // 通用寄存器
+    uint32_t eip;                   // 指令指针
+    uint32_t esp;                   // 栈指针
+    uint32_t ebp;                   // 基址指针
+    uint32_t eflags;                // 标志寄存器
+    uint32_t cs, ds, es, ss;        // 段寄存器
+    uint32_t start_time;            // 进程开始执行时间
+    uint32_t wait_time;             // 等待时间
+    uint32_t turnaround_time;       // 周转时间
+    uint32_t response_time;         // 响应时间
+    uint32_t executed_time;         // 已执行时间
+} pcb_t;
+
 // 全局变量声明（extern）
 extern process_t process_table[MAX_PROCESSES];
+extern pcb_t pcb_table[MAX_PROCESSES];
 
 // 内核API
 void process_init(void);
@@ -50,5 +67,10 @@ process_t* find_process_by_pid(uint32_t pid);
 void terminate_process(process_t* proc);
 void process_set_state(process_t* proc, process_state_t new_state);
 void dump_process_info(process_t* proc);
+
+// CPU上下文管理API
+void save_cpu_context(pcb_t* pcb);
+void restore_cpu_context(pcb_t* pcb);
+void initialize_cpu_context(pcb_t* pcb);
 
 #endif // _PROCESS_H

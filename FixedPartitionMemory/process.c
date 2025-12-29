@@ -2,10 +2,12 @@
 #include "log.h"
 #include "process.h"
 #include "config.h"
+#include <string.h>
+#include <stdlib.h>
 
-
-// ��ȷ����ȫ�ֱ���
+// 定义全局变量
 process_t process_table[MAX_PROCESSES];
+pcb_t pcb_table[MAX_PROCESSES];
 static uint32_t next_pid = 1;
 
 void process_init(void) {
@@ -14,6 +16,11 @@ void process_init(void) {
         process_table[i].pid = 0;
         process_table[i].state = PROC_TERMINATED;
         process_table[i].next = NULL;
+        
+        // 初始化PCB
+        pcb_table[i].base.pid = 0;
+        pcb_table[i].base.state = PROC_TERMINATED;
+        pcb_table[i].base.next = NULL;
     }
     next_pid = 1;
     DEBUG_PRINT("Process table initialized");
@@ -46,6 +53,11 @@ process_t* create_process(uint32_t pid, const char* name, uint32_t memory_size,
             proc->priority = 3;
             proc->io_requests = 0;
             proc->next = NULL;
+
+            // 初始化对应的PCB
+            pcb_t* pcb = &pcb_table[i];
+            pcb->base = *proc;  // 复制进程信息
+            initialize_cpu_context(pcb);  // 初始化CPU上下文
 
             DEBUG_PRINT("Process created: PID=%d, Name=%s, Memory=%d, Time=%d",
                 proc->pid, proc->name, proc->memory_size, proc->burst_time);
@@ -82,4 +94,46 @@ void process_set_state(process_t* proc, process_state_t new_state) {
 }
 
 void dump_process_info(process_t* proc) {
+    if (!proc) return;
+    
+    const char* state_str[] = {"CREATED", "READY", "RUNNING", "WAITING", "TERMINATED"};
+    kernel_log(LOG_INFO, "Process Info: PID=%d, Name=%s, State=%s, Remaining=%d",
+               proc->pid, proc->name, state_str[proc->state], proc->remaining_time);
+}
+
+// CPU上下文管理函数
+void save_cpu_context(pcb_t* pcb) {
+    if (!pcb) return;
+    
+    // 在实际系统中，这里会保存真实的CPU寄存器状态
+    // 这里我们模拟保存上下文
+    pcb->eax = pcb->base.pid * 100 + pcb->base.remaining_time;
+    pcb->eip = pcb->base.pid * 1000 + pcb->base.remaining_time;
+    pcb->esp = pcb->base.pid * 2000 + pcb->base.remaining_time;
+    
+    DEBUG_PRINT("Saved CPU context for process %d", pcb->base.pid);
+}
+
+void restore_cpu_context(pcb_t* pcb) {
+    if (!pcb) return;
+    
+    // 在实际系统中，这里会恢复真实的CPU寄存器状态
+    // 这里我们模拟恢复上下文
+    pcb->eax = pcb->base.pid * 100 + pcb->base.remaining_time;
+    pcb->eip = pcb->base.pid * 1000 + pcb->base.remaining_time;
+    pcb->esp = pcb->base.pid * 2000 + pcb->base.remaining_time;
+    
+    DEBUG_PRINT("Restored CPU context for process %d", pcb->base.pid);
+}
+
+void initialize_cpu_context(pcb_t* pcb) {
+    if (!pcb) return;
+    
+    memset(&pcb->eax, 0, sizeof(uint32_t) * 11);  // 清零所有寄存器
+    pcb->eip = 0x00400000;  // 模拟进程入口地址
+    pcb->esp = 0x00800000;  // 模拟栈指针
+    pcb->ebp = 0x00800000;  // 模拟基址指针
+    pcb->eflags = 0x202;    // 默认标志
+    
+    DEBUG_PRINT("Initialized CPU context for process %d", pcb->base.pid);
 }
