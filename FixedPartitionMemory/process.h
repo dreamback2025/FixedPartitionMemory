@@ -42,17 +42,17 @@ typedef struct process_t {
 // 进程控制块扩展，包含CPU上下文
 typedef struct {
     process_t base;                 // 基础进程结构
+    uint32_t start_time;            // 进程开始执行时间
+    uint32_t wait_time;             // 等待时间
+    uint32_t turnaround_time;       // 周转时间
+    uint32_t response_time;         // 响应时间
+    uint32_t executed_time;         // 已执行时间
     uint32_t eax, ebx, ecx, edx;    // 通用寄存器
     uint32_t eip;                   // 指令指针
     uint32_t esp;                   // 栈指针
     uint32_t ebp;                   // 基址指针
     uint32_t eflags;                // 标志寄存器
     uint32_t cs, ds, es, ss;        // 段寄存器
-    uint32_t start_time;            // 进程开始执行时间
-    uint32_t wait_time;             // 等待时间
-    uint32_t turnaround_time;       // 周转时间
-    uint32_t response_time;         // 响应时间
-    uint32_t executed_time;         // 已执行时间
 } pcb_t;
 
 // 全局变量声明（extern）

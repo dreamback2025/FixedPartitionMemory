@@ -101,39 +101,3 @@ void dump_process_info(process_t* proc) {
                proc->pid, proc->name, state_str[proc->state], proc->remaining_time);
 }
 
-// CPU上下文管理函数
-void save_cpu_context(pcb_t* pcb) {
-    if (!pcb) return;
-    
-    // 在实际系统中，这里会保存真实的CPU寄存器状态
-    // 这里我们模拟保存上下文
-    pcb->eax = pcb->base.pid * 100 + pcb->base.remaining_time;
-    pcb->eip = pcb->base.pid * 1000 + pcb->base.remaining_time;
-    pcb->esp = pcb->base.pid * 2000 + pcb->base.remaining_time;
-    
-    DEBUG_PRINT("Saved CPU context for process %d", pcb->base.pid);
-}
-
-void restore_cpu_context(pcb_t* pcb) {
-    if (!pcb) return;
-    
-    // 在实际系统中，这里会恢复真实的CPU寄存器状态
-    // 这里我们模拟恢复上下文
-    pcb->eax = pcb->base.pid * 100 + pcb->base.remaining_time;
-    pcb->eip = pcb->base.pid * 1000 + pcb->base.remaining_time;
-    pcb->esp = pcb->base.pid * 2000 + pcb->base.remaining_time;
-    
-    DEBUG_PRINT("Restored CPU context for process %d", pcb->base.pid);
-}
-
-void initialize_cpu_context(pcb_t* pcb) {
-    if (!pcb) return;
-    
-    memset(&pcb->eax, 0, sizeof(uint32_t) * 11);  // 清零所有寄存器
-    pcb->eip = 0x00400000;  // 模拟进程入口地址
-    pcb->esp = 0x00800000;  // 模拟栈指针
-    pcb->ebp = 0x00800000;  // 模拟基址指针
-    pcb->eflags = 0x202;    // 默认标志
-    
-    DEBUG_PRINT("Initialized CPU context for process %d", pcb->base.pid);
-}
