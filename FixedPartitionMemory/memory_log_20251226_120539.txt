@@ -1,0 +1,300 @@
+=== Fixed Partition Memory Management System ===
+Program start time: Fri Dec 26 12:05:39 2025
+
+Please select process generation method:
+1. Auto generate processes
+2. Manual input processes
+Please select: 
+Please enter number of processes (1-10): Created auto process: AutoProcess1, Memory=50, Time=5, Arrival=2
+Created auto process: AutoProcess2, Memory=47, Time=6, Arrival=4
+Created auto process: AutoProcess3, Memory=158, Time=4, Arrival=1
+Created auto process: AutoProcess4, Memory=136, Time=4, Arrival=2
+Created auto process: AutoProcess5, Memory=108, Time=2, Arrival=1
+
+Please select time advancement method:
+1. Manual mode (press any key to advance time)
+2. Auto mode (timer)
+Please select: 
+Auto mode selected. Timer interval: 1000ms
+
+--- Screen cleared (Time: 0) ---
+=== Fixed Partition Memory Management System ===
+Current Time: 0
+Allocation Strategy: Best Fit Algorithm
+Run Mode: Auto Mode
+
+--- Memory Map ---
+Start Addr  End Addr  Size    Status      Owner PID
+0x0000   0x007f    128    OS          0
+0x0080   0x00ff    128    Free        0
+0x0100   0x017f    128    Free        0
+0x0180   0x01ff    128    Free        0
+0x0200   0x027f    128    Free        0
+0x0280   0x02df     96    Free        0
+0x02e0   0x033f     96    Free        0
+0x0340   0x039f     96    Free        0
+0x03a0   0x03ff     96    Free        0
+
+--- Process Status ---
+PID  Name           Status      Memory Size  Remaining Time  Arrival Time
+1    AutoProcess1  Created     50       5          2
+2    AutoProcess2  Created     47       6          4
+3    AutoProcess3  Created    158       4          1
+4    AutoProcess4  Created    136       4          2
+5    AutoProcess5  Created    108       2          1
+
+--- Memory Statistics ---
+Total Memory: 1024 bytes
+OS Occupied: 128 bytes
+Total Free Memory: 896 bytes (100.0%)
+Total Used Memory: 0 bytes (0.0%)
+Largest Free Block: 128 bytes
+
+--- Scheduler Status ---
+Scheduling Algorithm: Round Robin (RR)
+Ready Queue Process Count: 0
+Current Running Process: None
+Current Time Slice: 0/2
+Q=Quit, C=Compact Memory, F=First Fit, B=Best Fit, W=Worst Fit
+Press any key to continue...
+Auto mode started. Press 'q' to quit, 'c' to compact memory...
+
+Process AutoProcess3 (PID=3) arrived at time 1
+Cannot allocate memory for process AutoProcess3, will try again next time
+
+Process AutoProcess5 (PID=5) arrived at time 1
+
+Memory allocated to process AutoProcess5
+
+--- Screen cleared (Time: 1) ---
+=== Fixed Partition Memory Management System ===
+Current Time: 1
+Allocation Strategy: Best Fit Algorithm
+Run Mode: Auto Mode
+
+--- Memory Map ---
+Start Addr  End Addr  Size    Status      Owner PID
+0x0000   0x007f    128    OS          0
+0x0080   0x00ff    128    Allocated    5
+0x0100   0x017f    128    Free        0
+0x0180   0x01ff    128    Free        0
+0x0200   0x027f    128    Free        0
+0x0280   0x02df     96    Free        0
+0x02e0   0x033f     96    Free        0
+0x0340   0x039f     96    Free        0
+0x03a0   0x03ff     96    Free        0
+
+--- Process Status ---
+PID  Name           Status      Memory Size  Remaining Time  Arrival Time
+1    AutoProcess1  Created     50       5          2
+2    AutoProcess2  Created     47       6          4
+3    AutoProcess3  Created    158       4          1
+4    AutoProcess4  Created    136       4          2
+5    AutoProcess5  Running    108       1          1
+
+--- Memory Statistics ---
+Total Memory: 1024 bytes
+OS Occupied: 128 bytes
+Total Free Memory: 768 bytes (85.7%)
+Total Used Memory: 128 bytes (14.3%)
+Largest Free Block: 128 bytes
+
+--- Scheduler Status ---
+Scheduling Algorithm: Round Robin (RR)
+Ready Queue Process Count: 0
+Current Running Process: AutoProcess5
+Current Time Slice: 1/2
+Q=Quit, C=Compact Memory, F=First Fit, B=Best Fit, W=Worst Fit
+Press any key to continue...
+
+Process AutoProcess1 (PID=1) arrived at time 2
+
+Memory allocated to process AutoProcess1
+
+Process AutoProcess3 (PID=3) arrived at time 2
+Cannot allocate memory for process AutoProcess3, will try again next time
+
+Process AutoProcess4 (PID=4) arrived at time 2
+Cannot allocate memory for process AutoProcess4, will try again next time
+
+--- Screen cleared (Time: 2) ---
+=== Fixed Partition Memory Management System ===
+Current Time: 2
+Allocation Strategy: Best Fit Algorithm
+Run Mode: Auto Mode
+
+--- Memory Map ---
+Start Addr  End Addr  Size    Status      Owner PID
+0x0000   0x007f    128    OS          0
+0x0080   0x00ff    128    Free        0
+0x0100   0x017f    128    Free        0
+0x0180   0x01ff    128    Free        0
+0x0200   0x027f    128    Free        0
+0x0280   0x02df     96    Allocated    1
+0x02e0   0x033f     96    Free        0
+0x0340   0x039f     96    Free        0
+0x03a0   0x03ff     96    Free        0
+
+--- Process Status ---
+PID  Name           Status      Memory Size  Remaining Time  Arrival Time
+1    AutoProcess1  Ready       50       5          2
+2    AutoProcess2  Created     47       6          4
+3    AutoProcess3  Created    158       4          1
+4    AutoProcess4  Created    136       4          2
+
+--- Memory Statistics ---
+Total Memory: 1024 bytes
+OS Occupied: 128 bytes
+Total Free Memory: 800 bytes (89.3%)
+Total Used Memory: 96 bytes (10.7%)
+Largest Free Block: 128 bytes
+
+--- Scheduler Status ---
+Scheduling Algorithm: Round Robin (RR)
+Ready Queue Process Count: 1
+Current Running Process: None
+Current Time Slice: 1/2
+Q=Quit, C=Compact Memory, F=First Fit, B=Best Fit, W=Worst Fit
+Press any key to continue...
+
+Process AutoProcess3 (PID=3) arrived at time 3
+Cannot allocate memory for process AutoProcess3, will try again next time
+
+Process AutoProcess4 (PID=4) arrived at time 3
+Cannot allocate memory for process AutoProcess4, will try again next time
+
+--- Screen cleared (Time: 3) ---
+=== Fixed Partition Memory Management System ===
+Current Time: 3
+Allocation Strategy: Best Fit Algorithm
+Run Mode: Auto Mode
+
+--- Memory Map ---
+Start Addr  End Addr  Size    Status      Owner PID
+0x0000   0x007f    128    OS          0
+0x0080   0x00ff    128    Free        0
+0x0100   0x017f    128    Free        0
+0x0180   0x01ff    128    Free        0
+0x0200   0x027f    128    Free        0
+0x0280   0x02df     96    Allocated    1
+0x02e0   0x033f     96    Free        0
+0x0340   0x039f     96    Free        0
+0x03a0   0x03ff     96    Free        0
+
+--- Process Status ---
+PID  Name           Status      Memory Size  Remaining Time  Arrival Time
+1    AutoProcess1  Running     50       4          2
+2    AutoProcess2  Created     47       6          4
+3    AutoProcess3  Created    158       4          1
+4    AutoProcess4  Created    136       4          2
+
+--- Memory Statistics ---
+Total Memory: 1024 bytes
+OS Occupied: 128 bytes
+Total Free Memory: 800 bytes (89.3%)
+Total Used Memory: 96 bytes (10.7%)
+Largest Free Block: 128 bytes
+
+--- Scheduler Status ---
+Scheduling Algorithm: Round Robin (RR)
+Ready Queue Process Count: 0
+Current Running Process: AutoProcess1
+Current Time Slice: 1/2
+Q=Quit, C=Compact Memory, F=First Fit, B=Best Fit, W=Worst Fit
+Press any key to continue...
+
+Process AutoProcess2 (PID=2) arrived at time 4
+
+Memory allocated to process AutoProcess2
+
+Process AutoProcess3 (PID=3) arrived at time 4
+Cannot allocate memory for process AutoProcess3, will try again next time
+
+Process AutoProcess4 (PID=4) arrived at time 4
+Cannot allocate memory for process AutoProcess4, will try again next time
+
+--- Screen cleared (Time: 4) ---
+=== Fixed Partition Memory Management System ===
+Current Time: 4
+Allocation Strategy: Best Fit Algorithm
+Run Mode: Auto Mode
+
+--- Memory Map ---
+Start Addr  End Addr  Size    Status      Owner PID
+0x0000   0x007f    128    OS          0
+0x0080   0x00ff    128    Free        0
+0x0100   0x017f    128    Free        0
+0x0180   0x01ff    128    Free        0
+0x0200   0x027f    128    Free        0
+0x0280   0x02df     96    Allocated    1
+0x02e0   0x033f     96    Allocated    2
+0x0340   0x039f     96    Free        0
+0x03a0   0x03ff     96    Free        0
+
+--- Process Status ---
+PID  Name           Status      Memory Size  Remaining Time  Arrival Time
+1    AutoProcess1  Running     50       3          2
+2    AutoProcess2  Ready       47       6          4
+3    AutoProcess3  Created    158       4          1
+4    AutoProcess4  Created    136       4          2
+
+--- Memory Statistics ---
+Total Memory: 1024 bytes
+OS Occupied: 128 bytes
+Total Free Memory: 704 bytes (78.6%)
+Total Used Memory: 192 bytes (21.4%)
+Largest Free Block: 128 bytes
+
+--- Scheduler Status ---
+Scheduling Algorithm: Round Robin (RR)
+Ready Queue Process Count: 1
+Current Running Process: AutoProcess1
+Current Time Slice: 1/2
+Q=Quit, C=Compact Memory, F=First Fit, B=Best Fit, W=Worst Fit
+Press any key to continue...
+
+Process AutoProcess3 (PID=3) arrived at time 5
+Cannot allocate memory for process AutoProcess3, will try again next time
+
+Process AutoProcess4 (PID=4) arrived at time 5
+Cannot allocate memory for process AutoProcess4, will try again next time
+
+--- Screen cleared (Time: 5) ---
+=== Fixed Partition Memory Management System ===
+Current Time: 5
+Allocation Strategy: Best Fit Algorithm
+Run Mode: Auto Mode
+
+--- Memory Map ---
+Start Addr  End Addr  Size    Status      Owner PID
+0x0000   0x007f    128    OS          0
+0x0080   0x00ff    128    Free        0
+0x0100   0x017f    128    Free        0
+0x0180   0x01ff    128    Free        0
+0x0200   0x027f    128    Free        0
+0x0280   0x02df     96    Allocated    1
+0x02e0   0x033f     96    Allocated    2
+0x0340   0x039f     96    Free        0
+0x03a0   0x03ff     96    Free        0
+
+--- Process Status ---
+PID  Name           Status      Memory Size  Remaining Time  Arrival Time
+1    AutoProcess1  Running     50       2          2
+2    AutoProcess2  Ready       47       6          4
+3    AutoProcess3  Created    158       4          1
+4    AutoProcess4  Created    136       4          2
+
+--- Memory Statistics ---
+Total Memory: 1024 bytes
+OS Occupied: 128 bytes
+Total Free Memory: 704 bytes (78.6%)
+Total Used Memory: 192 bytes (21.4%)
+Largest Free Block: 128 bytes
+
+--- Scheduler Status ---
+Scheduling Algorithm: Round Robin (RR)
+Ready Queue Process Count: 1
+Current Running Process: AutoProcess1
+Current Time Slice: 1/2
+Q=Quit, C=Compact Memory, F=First Fit, B=Best Fit, W=Worst Fit
+Press any key to continue...

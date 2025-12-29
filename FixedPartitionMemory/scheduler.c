@@ -5,10 +5,10 @@
 #include "process.h"
 #include "memory.h"
 
-// å…¨å±€è°ƒåº¦å™¨
+// È«¾Öµ÷¶ÈÆ÷
 scheduler_t g_scheduler;
 
-// å°±ç»ªé˜Ÿåˆ—æ“ä½œ
+// ¾ÍĞ÷¶ÓÁĞ²Ù×÷
 static void ready_queue_init(ready_queue_t* queue) {
     queue->front = NULL;
     queue->rear = NULL;
@@ -21,11 +21,12 @@ static void ready_queue_enqueue(ready_queue_t* queue, process_t* proc) {
     proc->next = NULL;
 
     if (queue->rear == NULL) {
-        // é˜Ÿåˆ—ä¸ºç©º
+        // ¶ÓÁĞÎª¿Õ
         queue->front = proc;
         queue->rear = proc;
-    } else {
-        // æ·»åŠ åˆ°é˜Ÿåˆ—æœ«å°¾
+    }
+    else {
+        // Ìí¼Óµ½¶ÓÁĞÄ©Î²
         queue->rear->next = proc;
         queue->rear = proc;
     }
@@ -41,128 +42,131 @@ static process_t* ready_queue_dequeue(ready_queue_t* queue) {
     queue->front = proc->next;
 
     if (queue->front == NULL) {
-        // é˜Ÿåˆ—å˜ç©º
+        // ¶ÓÁĞ±ä¿Õ
         queue->rear = NULL;
     }
-    
+
     proc->next = NULL;
     queue->count--;
     return proc;
 }
 
-// è°ƒåº¦å™¨åˆå§‹åŒ–
+// µ÷¶ÈÆ÷³õÊ¼»¯
 void scheduler_init(scheduler_type_t type) {
     ready_queue_init(&g_scheduler.ready_queue);
     g_scheduler.current_process = NULL;
     g_scheduler.type = type;
-    g_scheduler.time_slice = TIME_SLICE;  // ä»config.hè·å–
+    g_scheduler.time_slice = TIME_SLICE;  // ´Óconfig.h»ñÈ¡
     g_scheduler.current_time_slice = 0;
-    
+
     DEBUG_PRINT("Scheduler initialized with type %d", type);
 }
 
-// æ·»åŠ è¿›ç¨‹åˆ°å°±ç»ªé˜Ÿåˆ—
+// Ìí¼Ó½ø³Ìµ½¾ÍĞ÷¶ÓÁĞ
 void scheduler_add_process(process_t* proc) {
     if (!proc) return;
-    
+
     process_set_state(proc, PROC_READY);
     ready_queue_enqueue(&g_scheduler.ready_queue, proc);
-    
+
     DEBUG_PRINT("Process %d added to ready queue", proc->pid);
 }
 
-// è·å–ä¸‹ä¸€ä¸ªè¦è°ƒåº¦çš„è¿›ç¨‹
+// »ñÈ¡ÏÂÒ»¸öÒªµ÷¶ÈµÄ½ø³Ì
 process_t* scheduler_get_next_process(void) {
     process_t* next_proc = NULL;
-    
+
     switch (g_scheduler.type) {
-        case SCHED_FIFO:
-            // FIFO: æŒ‰ç…§å°±ç»ªé˜Ÿåˆ—é¡ºåº
-            next_proc = ready_queue_dequeue(&g_scheduler.ready_queue);
-            break;
-            
-        case SCHED_RR:
-            // æ—¶é—´ç‰‡è½®è½¬: ä»å°±ç»ªé˜Ÿåˆ—å–ä¸‹ä¸€ä¸ª
-            if (g_scheduler.current_process && 
-                g_scheduler.current_process->state == PROC_RUNNING) {
-                // å¦‚æœå½“å‰è¿›ç¨‹æ—¶é—´ç‰‡ç”¨å®Œï¼Œæ”¾å›é˜Ÿåˆ—æœ«å°¾
-                if (g_scheduler.current_time_slice == 0) {
-                    process_set_state(g_scheduler.current_process, PROC_READY);
-                    ready_queue_enqueue(&g_scheduler.ready_queue, g_scheduler.current_process);
-                    g_scheduler.current_process = NULL;
-                }
+    case SCHED_FIFO:
+        // FIFO: °´ÕÕ¾ÍĞ÷¶ÓÁĞË³Ğò
+        next_proc = ready_queue_dequeue(&g_scheduler.ready_queue);
+        break;
+
+    case SCHED_RR:
+        // Ê±¼äÆ¬ÂÖ×ª: ´Ó¾ÍĞ÷¶ÓÁĞÈ¡ÏÂÒ»¸ö
+        if (g_scheduler.current_process &&
+            g_scheduler.current_process->state == PROC_RUNNING) {
+            // Èç¹ûµ±Ç°½ø³ÌÊ±¼äÆ¬ÓÃÍê£¬·Å»Ø¶ÓÁĞÄ©Î²
+            if (g_scheduler.current_time_slice == 0) {
+                process_set_state(g_scheduler.current_process, PROC_READY);
+                ready_queue_enqueue(&g_scheduler.ready_queue, g_scheduler.current_process);
+                g_scheduler.current_process = NULL;
             }
-            
-            if (!g_scheduler.current_process) {
-                next_proc = ready_queue_dequeue(&g_scheduler.ready_queue);
-            }
-            break;
-            
-        case SCHED_PRIORITY:
-            // ä¼˜å…ˆçº§è°ƒåº¦: è¿™é‡Œç®€åŒ–å®ç°ï¼Œå–é˜Ÿåˆ—ä¸­çš„è¿›ç¨‹
+        }
+
+        if (!g_scheduler.current_process) {
             next_proc = ready_queue_dequeue(&g_scheduler.ready_queue);
-            break;
-            
-        default:
-            next_proc = ready_queue_dequeue(&g_scheduler.ready_queue);
-            break;
+        }
+        break;
+
+    case SCHED_PRIORITY:
+        // ÓÅÏÈ¼¶µ÷¶È: ÕâÀï¼ò»¯ÊµÏÖ£¬È¡¶ÓÁĞÖĞµÄ½ø³Ì
+        next_proc = ready_queue_dequeue(&g_scheduler.ready_queue);
+        break;
+
+    default:
+        next_proc = ready_queue_dequeue(&g_scheduler.ready_queue);
+        break;
     }
-    
+
     return next_proc;
 }
 
-// æ‰§è¡Œè°ƒåº¦
+// Ö´ĞĞµ÷¶È
 void scheduler_schedule(void) {
-    // è·å–ä¸‹ä¸€ä¸ªè¿›ç¨‹
+    // »ñÈ¡ÏÂÒ»¸ö½ø³Ì
     process_t* next_proc = scheduler_get_next_process();
-    
+
     if (next_proc) {
-        // è®¾ç½®å½“å‰è¿›ç¨‹
+        // ÉèÖÃµ±Ç°½ø³Ì
         g_scheduler.current_process = next_proc;
         process_set_state(next_proc, PROC_RUNNING);
         g_scheduler.current_time_slice = g_scheduler.time_slice;
-        
+
         DEBUG_PRINT("Scheduled process %d to run", next_proc->pid);
-    } else if (g_scheduler.current_process) {
-        // å¦‚æœæ²¡æœ‰æ–°è¿›ç¨‹ä½†å½“å‰è¿›ç¨‹è¿˜åœ¨è¿è¡Œï¼Œç»§ç»­è¿è¡Œ
+    }
+    else if (g_scheduler.current_process) {
+        // Èç¹ûÃ»ÓĞĞÂ½ø³Ìµ«µ±Ç°½ø³Ì»¹ÔÚÔËĞĞ£¬¼ÌĞøÔËĞĞ
         if (g_scheduler.current_process->state == PROC_RUNNING) {
             g_scheduler.current_time_slice = g_scheduler.time_slice;
-        } else {
+        }
+        else {
             g_scheduler.current_process = NULL;
         }
     }
 }
 
-// æ‰§è¡Œå½“å‰è¿›ç¨‹
+// Ö´ĞĞµ±Ç°½ø³Ì
 void scheduler_run_current_process(void) {
     if (!g_scheduler.current_process) {
         return;
     }
-    
+
     process_t* current = g_scheduler.current_process;
-    
-    // æ£€æŸ¥è¿›ç¨‹çŠ¶æ€
+
+    // ¼ì²é½ø³Ì×´Ì¬
     if (current->state != PROC_RUNNING) {
         g_scheduler.current_process = NULL;
         return;
     }
-    
-    // æ‰§è¡Œä¸€ä¸ªæ—¶é—´å•ä½
+
+    // Ö´ĞĞÒ»¸öÊ±¼äµ¥Î»
     if (current->remaining_time > 0) {
         current->remaining_time--;
         g_scheduler.current_time_slice--;
-        
-        DEBUG_PRINT("Process %d executed, remaining time: %d", 
-                   current->pid, current->remaining_time);
-        
-        // æ£€æŸ¥æ˜¯å¦å®Œæˆ
+
+        DEBUG_PRINT("Process %d executed, remaining time: %d",
+            current->pid, current->remaining_time);
+
+        // ¼ì²éÊÇ·ñÍê³É
         if (current->remaining_time == 0) {
             DEBUG_PRINT("Process %d completed at time slice", current->pid);
             free_memory(current);
             process_set_state(current, PROC_TERMINATED);
             g_scheduler.current_process = NULL;
-        } else if (g_scheduler.current_time_slice == 0 && g_scheduler.type == SCHED_RR) {
-            // æ—¶é—´ç‰‡ç”¨å®Œï¼Œæ”¾å›å°±ç»ªé˜Ÿåˆ—
+        }
+        else if (g_scheduler.current_time_slice == 0 && g_scheduler.type == SCHED_RR) {
+            // Ê±¼äÆ¬ÓÃÍê£¬·Å»Ø¾ÍĞ÷¶ÓÁĞ
             process_set_state(current, PROC_READY);
             ready_queue_enqueue(&g_scheduler.ready_queue, current);
             g_scheduler.current_process = NULL;
@@ -171,31 +175,31 @@ void scheduler_run_current_process(void) {
     }
 }
 
-// æ˜¾ç¤ºè°ƒåº¦å™¨çŠ¶æ€
+// ÏÔÊ¾µ÷¶ÈÆ÷×´Ì¬
 void scheduler_dump_status(void) {
     kernel_log(LOG_INFO, "Scheduler Status:");
-    kernel_log(LOG_INFO, "  Type: %s", 
-              g_scheduler.type == SCHED_FIFO ? "FIFO" :
-              g_scheduler.type == SCHED_RR ? "Round Robin" : "Priority");
+    kernel_log(LOG_INFO, "  Type: %s",
+        g_scheduler.type == SCHED_FIFO ? "FIFO" :
+        g_scheduler.type == SCHED_RR ? "Round Robin" : "Priority");
     kernel_log(LOG_INFO, "  Ready Queue Count: %d", g_scheduler.ready_queue.count);
-    kernel_log(LOG_INFO, "  Current Process: %s", 
-              g_scheduler.current_process ? 
-              g_scheduler.current_process->name : "None");
-    kernel_log(LOG_INFO, "  Time Slice: %d/%d", 
-              g_scheduler.current_time_slice, g_scheduler.time_slice);
+    kernel_log(LOG_INFO, "  Current Process: %s",
+        g_scheduler.current_process ?
+        g_scheduler.current_process->name : "None");
+    kernel_log(LOG_INFO, "  Time Slice: %d/%d",
+        g_scheduler.current_time_slice, g_scheduler.time_slice);
 }
 
-// æ—¶é—´ç‰‡è½®è½¬è°ƒåº¦åˆå§‹åŒ–
+// Ê±¼äÆ¬ÂÖ×ªµ÷¶È³õÊ¼»¯
 void rr_scheduler_init(void) {
     scheduler_init(SCHED_RR);
 }
 
-// è·å–ä¸‹ä¸€ä¸ªRRè¿›ç¨‹
+// »ñÈ¡ÏÂÒ»¸öRR½ø³Ì
 process_t* rr_scheduler_get_next(void) {
     return scheduler_get_next_process();
 }
 
-// æ‰§è¡ŒRRè¿›ç¨‹
+// Ö´ĞĞRR½ø³Ì
 void rr_scheduler_run_process(process_t* proc) {
     if (proc) {
         g_scheduler.current_process = proc;

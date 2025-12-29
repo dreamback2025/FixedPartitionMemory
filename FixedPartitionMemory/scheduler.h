@@ -4,30 +4,30 @@
 #include "os_types.h"
 #include "process.h"
 
-// è°ƒåº¦ç®—æ³•ç±»å‹
+// µ÷¶ÈËã·¨ÀàĞÍ
 typedef enum {
-    SCHED_FIFO,      // å…ˆè¿›å…ˆå‡º
-    SCHED_RR,        // æ—¶é—´ç‰‡è½®è½¬
-    SCHED_PRIORITY   // ä¼˜å…ˆçº§è°ƒåº¦
+    SCHED_FIFO,      // ÏÈ½øÏÈ³ö
+    SCHED_RR,        // Ê±¼äÆ¬ÂÖ×ª
+    SCHED_PRIORITY   // ÓÅÏÈ¼¶µ÷¶È
 } scheduler_type_t;
 
-// å°±ç»ªé˜Ÿåˆ—ç»“æ„
+// ¾ÍĞ÷¶ÓÁĞ½á¹¹
 typedef struct ready_queue_t {
-    process_t* front;    // é˜Ÿåˆ—å‰ç«¯
-    process_t* rear;     // é˜Ÿåˆ—åç«¯
-    uint32_t count;      // é˜Ÿåˆ—ä¸­çš„è¿›ç¨‹æ•°é‡
+    process_t* front;    // ¶ÓÁĞÇ°¶Ë
+    process_t* rear;     // ¶ÓÁĞºó¶Ë
+    uint32_t count;      // ¶ÓÁĞÖĞµÄ½ø³ÌÊıÁ¿
 } ready_queue_t;
 
-// è°ƒåº¦å™¨çŠ¶æ€
+// µ÷¶ÈÆ÷×´Ì¬
 typedef struct scheduler_t {
     ready_queue_t ready_queue;
-    process_t* current_process;  // å½“å‰è¿è¡Œçš„è¿›ç¨‹
-    scheduler_type_t type;       // è°ƒåº¦ç®—æ³•ç±»å‹
-    uint32_t time_slice;         // æ—¶é—´ç‰‡å¤§å°
-    uint32_t current_time_slice; // å½“å‰æ—¶é—´ç‰‡å‰©ä½™
+    process_t* current_process;  // µ±Ç°ÔËĞĞµÄ½ø³Ì
+    scheduler_type_t type;       // µ÷¶ÈËã·¨ÀàĞÍ
+    uint32_t time_slice;         // Ê±¼äÆ¬´óĞ¡
+    uint32_t current_time_slice; // µ±Ç°Ê±¼äÆ¬Ê£Óà
 } scheduler_t;
 
-// è°ƒåº¦å™¨API
+// µ÷¶ÈÆ÷API
 void scheduler_init(scheduler_type_t type);
 void scheduler_add_process(process_t* proc);
 process_t* scheduler_get_next_process(void);
@@ -35,10 +35,10 @@ void scheduler_schedule(void);
 void scheduler_run_current_process(void);
 void scheduler_dump_status(void);
 
-// å…¨å±€è°ƒåº¦å™¨å˜é‡å£°æ˜
+// È«¾Öµ÷¶ÈÆ÷±äÁ¿ÉùÃ÷
 extern scheduler_t g_scheduler;
 
-// æ—¶é—´ç‰‡è½®è½¬è°ƒåº¦ç›¸å…³å‡½æ•°
+// Ê±¼äÆ¬ÂÖ×ªµ÷¶ÈÏà¹Øº¯Êı
 void rr_scheduler_init(void);
 process_t* rr_scheduler_get_next(void);
 void rr_scheduler_run_process(process_t* proc);
