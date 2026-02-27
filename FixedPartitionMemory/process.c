@@ -2,10 +2,12 @@
 #include "log.h"
 #include "process.h"
 #include "config.h"
+#include <string.h>
+#include <stdlib.h>
 
-
-// ��ȷ����ȫ�ֱ���
+// 定义全局变量
 process_t process_table[MAX_PROCESSES];
+pcb_t pcb_table[MAX_PROCESSES];
 static uint32_t next_pid = 1;
 
 void process_init(void) {
@@ -14,6 +16,11 @@ void process_init(void) {
         process_table[i].pid = 0;
         process_table[i].state = PROC_TERMINATED;
         process_table[i].next = NULL;
+        
+        // 初始化PCB
+        pcb_table[i].base.pid = 0;
+        pcb_table[i].base.state = PROC_TERMINATED;
+        pcb_table[i].base.next = NULL;
     }
     next_pid = 1;
     DEBUG_PRINT("Process table initialized");
@@ -46,6 +53,11 @@ process_t* create_process(uint32_t pid, const char* name, uint32_t memory_size,
             proc->priority = 3;
             proc->io_requests = 0;
             proc->next = NULL;
+
+            // 初始化对应的PCB
+            pcb_t* pcb = &pcb_table[i];
+            pcb->base = *proc;  // 复制进程信息
+            initialize_cpu_context(pcb);  // 初始化CPU上下文
 
             DEBUG_PRINT("Process created: PID=%d, Name=%s, Memory=%d, Time=%d",
                 proc->pid, proc->name, proc->memory_size, proc->burst_time);
@@ -82,4 +94,10 @@ void process_set_state(process_t* proc, process_state_t new_state) {
 }
 
 void dump_process_info(process_t* proc) {
+    if (!proc) return;
+    
+    const char* state_str[] = {"CREATED", "READY", "RUNNING", "WAITING", "TERMINATED"};
+    kernel_log(LOG_INFO, "Process Info: PID=%d, Name=%s, State=%s, Remaining=%d",
+               proc->pid, proc->name, state_str[proc->state], proc->remaining_time);
 }
+
